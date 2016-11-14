@@ -17,7 +17,7 @@ import io.swagger.model.WithdrawBodyWithdraw;
  * Data object encapsulating the transition parameters for the withdraw transition
  */
 @ApiModel(description = "Data object encapsulating the transition parameters for the withdraw transition")
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-07T08:05:00.767Z")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-14T12:30:06.878Z")
 public class WithdrawBody   {
   private WithdrawBodyWithdraw withdraw = null;
 

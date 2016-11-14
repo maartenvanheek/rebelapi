@@ -5,37 +5,38 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.model.CreateBodyCreate;
 
 
 
 /**
- * Data object encapsulating the transition parameters for the close transition
+ * Data object encapsulating the transition parameters for the create transition
  **/
 
 /**
- * Data object encapsulating the transition parameters for the close transition
+ * Data object encapsulating the transition parameters for the create transition
  */
-@ApiModel(description = "Data object encapsulating the transition parameters for the close transition")
+@ApiModel(description = "Data object encapsulating the transition parameters for the create transition")
 @javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-14T12:30:06.878Z")
-public class CloseBody   {
-  private Object close = null;
+public class CreateBody   {
+  private CreateBodyCreate create = null;
 
-  public CloseBody close(Object close) {
-    this.close = close;
+  public CreateBody create(CreateBodyCreate create) {
+    this.create = create;
     return this;
   }
 
    /**
-   * Get close
-   * @return close
+   * Get create
+   * @return create
   **/
-  @ApiModelProperty(required = true, value = "")
-  public Object getClose() {
-    return close;
+  @ApiModelProperty(value = "")
+  public CreateBodyCreate getCreate() {
+    return create;
   }
 
-  public void setClose(Object close) {
-    this.close = close;
+  public void setCreate(CreateBodyCreate create) {
+    this.create = create;
   }
 
 
@@ -47,21 +48,21 @@ public class CloseBody   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    CloseBody closeBody = (CloseBody) o;
-    return Objects.equals(this.close, closeBody.close);
+    CreateBody createBody = (CreateBody) o;
+    return Objects.equals(this.create, createBody.create);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(close);
+    return Objects.hash(create);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class CloseBody {\n");
+    sb.append("class CreateBody {\n");
     
-    sb.append("    close: ").append(toIndentedString(close)).append("\n");
+    sb.append("    create: ").append(toIndentedString(create)).append("\n");
     sb.append("}");
     return sb.toString();
   }

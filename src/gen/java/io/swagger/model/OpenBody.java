@@ -5,33 +5,38 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-
+import io.swagger.model.OpenBodyOpen;
 
 
 
 /**
- * OpenAccountBodyOpenAccount
- */
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-07T08:05:00.767Z")
-public class OpenAccountBodyOpenAccount   {
-  private String initialDeposit = null;
+ * Data object encapsulating the transition parameters for the open transition
+ **/
 
-  public OpenAccountBodyOpenAccount initialDeposit(String initialDeposit) {
-    this.initialDeposit = initialDeposit;
+/**
+ * Data object encapsulating the transition parameters for the open transition
+ */
+@ApiModel(description = "Data object encapsulating the transition parameters for the open transition")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-14T12:30:06.878Z")
+public class OpenBody   {
+  private OpenBodyOpen open = null;
+
+  public OpenBody open(OpenBodyOpen open) {
+    this.open = open;
     return this;
   }
 
    /**
-   * Get initialDeposit
-   * @return initialDeposit
+   * Get open
+   * @return open
   **/
   @ApiModelProperty(value = "")
-  public String getInitialDeposit() {
-    return initialDeposit;
+  public OpenBodyOpen getOpen() {
+    return open;
   }
 
-  public void setInitialDeposit(String initialDeposit) {
-    this.initialDeposit = initialDeposit;
+  public void setOpen(OpenBodyOpen open) {
+    this.open = open;
   }
 
 
@@ -43,21 +48,21 @@ public class OpenAccountBodyOpenAccount   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    OpenAccountBodyOpenAccount openAccountBodyOpenAccount = (OpenAccountBodyOpenAccount) o;
-    return Objects.equals(this.initialDeposit, openAccountBodyOpenAccount.initialDeposit);
+    OpenBody openBody = (OpenBody) o;
+    return Objects.equals(this.open, openBody.open);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(initialDeposit);
+    return Objects.hash(open);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class OpenAccountBodyOpenAccount {\n");
+    sb.append("class OpenBody {\n");
     
-    sb.append("    initialDeposit: ").append(toIndentedString(initialDeposit)).append("\n");
+    sb.append("    open: ").append(toIndentedString(open)).append("\n");
     sb.append("}");
     return sb.toString();
   }

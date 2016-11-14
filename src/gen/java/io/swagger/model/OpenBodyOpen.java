@@ -10,28 +10,28 @@ import io.swagger.annotations.ApiModelProperty;
 
 
 /**
- * InterestBodyInterest
+ * OpenBodyOpen
  */
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-07T08:05:00.767Z")
-public class InterestBodyInterest   {
-  private String currentInterest = null;
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-14T12:30:06.878Z")
+public class OpenBodyOpen   {
+  private String initialDeposit = null;
 
-  public InterestBodyInterest currentInterest(String currentInterest) {
-    this.currentInterest = currentInterest;
+  public OpenBodyOpen initialDeposit(String initialDeposit) {
+    this.initialDeposit = initialDeposit;
     return this;
   }
 
    /**
-   * Get currentInterest
-   * @return currentInterest
+   * Get initialDeposit
+   * @return initialDeposit
   **/
   @ApiModelProperty(value = "")
-  public String getCurrentInterest() {
-    return currentInterest;
+  public String getInitialDeposit() {
+    return initialDeposit;
   }
 
-  public void setCurrentInterest(String currentInterest) {
-    this.currentInterest = currentInterest;
+  public void setInitialDeposit(String initialDeposit) {
+    this.initialDeposit = initialDeposit;
   }
 
 
@@ -43,21 +43,21 @@ public class InterestBodyInterest   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    InterestBodyInterest interestBodyInterest = (InterestBodyInterest) o;
-    return Objects.equals(this.currentInterest, interestBodyInterest.currentInterest);
+    OpenBodyOpen openBodyOpen = (OpenBodyOpen) o;
+    return Objects.equals(this.initialDeposit, openBodyOpen.initialDeposit);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(currentInterest);
+    return Objects.hash(initialDeposit);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class InterestBodyInterest {\n");
+    sb.append("class OpenBodyOpen {\n");
     
-    sb.append("    currentInterest: ").append(toIndentedString(currentInterest)).append("\n");
+    sb.append("    initialDeposit: ").append(toIndentedString(initialDeposit)).append("\n");
     sb.append("}");
     return sb.toString();
   }

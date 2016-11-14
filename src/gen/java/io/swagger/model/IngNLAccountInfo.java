@@ -16,15 +16,15 @@ import io.swagger.annotations.ApiModelProperty;
  * Data structure representing the fields and current FSM state
  */
 @ApiModel(description = "Data structure representing the fields and current FSM state")
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-07T08:05:00.767Z")
-public class AccountInfo   {
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-14T12:30:06.878Z")
+public class IngNLAccountInfo   {
   private String state = null;
 
   private String accountNumber = null;
 
   private String balance = null;
 
-  public AccountInfo state(String state) {
+  public IngNLAccountInfo state(String state) {
     this.state = state;
     return this;
   }
@@ -42,7 +42,7 @@ public class AccountInfo   {
     this.state = state;
   }
 
-  public AccountInfo accountNumber(String accountNumber) {
+  public IngNLAccountInfo accountNumber(String accountNumber) {
     this.accountNumber = accountNumber;
     return this;
   }
@@ -60,7 +60,7 @@ public class AccountInfo   {
     this.accountNumber = accountNumber;
   }
 
-  public AccountInfo balance(String balance) {
+  public IngNLAccountInfo balance(String balance) {
     this.balance = balance;
     return this;
   }
@@ -87,10 +87,10 @@ public class AccountInfo   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    AccountInfo accountInfo = (AccountInfo) o;
-    return Objects.equals(this.state, accountInfo.state) &&
-        Objects.equals(this.accountNumber, accountInfo.accountNumber) &&
-        Objects.equals(this.balance, accountInfo.balance);
+    IngNLAccountInfo ingNLAccountInfo = (IngNLAccountInfo) o;
+    return Objects.equals(this.state, ingNLAccountInfo.state) &&
+        Objects.equals(this.accountNumber, ingNLAccountInfo.accountNumber) &&
+        Objects.equals(this.balance, ingNLAccountInfo.balance);
   }
 
   @Override
@@ -101,7 +101,7 @@ public class AccountInfo   {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class AccountInfo {\n");
+    sb.append("class IngNLAccountInfo {\n");
     
     sb.append("    state: ").append(toIndentedString(state)).append("\n");
     sb.append("    accountNumber: ").append(toIndentedString(accountNumber)).append("\n");

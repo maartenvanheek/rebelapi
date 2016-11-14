@@ -9,33 +9,33 @@ import io.swagger.annotations.ApiModelProperty;
 
 
 /**
- * Data object encapsulating the transition parameters for the close transition
+ * Data object encapsulating the transition parameters for the authorize transition
  **/
 
 /**
- * Data object encapsulating the transition parameters for the close transition
+ * Data object encapsulating the transition parameters for the authorize transition
  */
-@ApiModel(description = "Data object encapsulating the transition parameters for the close transition")
+@ApiModel(description = "Data object encapsulating the transition parameters for the authorize transition")
 @javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2016-11-14T12:30:06.878Z")
-public class CloseBody   {
-  private Object close = null;
+public class AuthorizeBody   {
+  private Object authorize = null;
 
-  public CloseBody close(Object close) {
-    this.close = close;
+  public AuthorizeBody authorize(Object authorize) {
+    this.authorize = authorize;
     return this;
   }
 
    /**
-   * Get close
-   * @return close
+   * Get authorize
+   * @return authorize
   **/
   @ApiModelProperty(required = true, value = "")
-  public Object getClose() {
-    return close;
+  public Object getAuthorize() {
+    return authorize;
   }
 
-  public void setClose(Object close) {
-    this.close = close;
+  public void setAuthorize(Object authorize) {
+    this.authorize = authorize;
   }
 
 
@@ -47,21 +47,21 @@ public class CloseBody   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    CloseBody closeBody = (CloseBody) o;
-    return Objects.equals(this.close, closeBody.close);
+    AuthorizeBody authorizeBody = (AuthorizeBody) o;
+    return Objects.equals(this.authorize, authorizeBody.authorize);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(close);
+    return Objects.hash(authorize);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class CloseBody {\n");
+    sb.append("class AuthorizeBody {\n");
     
-    sb.append("    close: ").append(toIndentedString(close)).append("\n");
+    sb.append("    authorize: ").append(toIndentedString(authorize)).append("\n");
     sb.append("}");
     return sb.toString();
   }
