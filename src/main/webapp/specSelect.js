@@ -4,41 +4,44 @@
 'use strict';
 var app = angular.module('visualApp.selection', []);
 
-app.controller('specCtrl', ['$log', '$uibModal', '$http', function ($log, $uibModal, $http) {
+app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($log, $uibModal, $http, $window) {
     var vm = this;
 
     vm.specs = specs;
     vm.showSpec = showSpec;
     vm.transition = transition;
-    vm.modaltest = modaltest;
+    // vm.modaltest = modaltest;
 
     // maybe need a prefix for the api?
+    vm.server = 'http://localhost:8080/';
     vm.apiPrefix = '';
+    vm.machineId = 1; //TODO: not sure yet where we get/store this id
+    vm.specData = undefined; //TODO: this is meant to come from HTTP GET
 
-
+    //default spec (so you don't have to pick one always)
     vm.selectedSpec = specs[0];
 
-    vm.specData = undefined;
+    // initial size of graph (not relevant??)
+    vm.h = $window.innerHeight;
+    vm.w = $window.innerWidth;
 
-    vm.h = 200;
-    vm.w = 500;
-
+    // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
-    function modaltest(){
-        console.log("in modaltest");
-        var $uibModalInstance = $uibModal.open({
-            backdrop: true,
-            animation: false,
-            templateUrl: 'test.tpl.html',
-            controller: 'testModalCtrl',
-            controllerAs: 'tvm'
-
-        });
-        $uibModalInstance.result.then(function (ok){
-            console.log("ok");
-        })
-    }
+    // function modaltest(){
+    //     console.log("in modaltest");
+    //     var $uibModalInstance = $uibModal.open({
+    //         backdrop: true,
+    //         animation: false,
+    //         templateUrl: 'test.tpl.html',
+    //         controller: 'testModalCtrl',
+    //         controllerAs: 'tvm'
+    //
+    //     });
+    //     $uibModalInstance.result.then(function (ok){
+    //         console.log("ok");
+    //     })
+    // }
 
     function showSpec(currentState) {
         // $log.debug(specs);
@@ -53,7 +56,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', function ($log, $uibMo
         // vm.graph = g;
         // $log.debug(g.graph._label.height);
         vm.w = g.graph._label.width;
-        vm.h = g.graph._label.height;
+        // vm.h = g.graph._label.height;
     }
 
     var SpecRenderer = function () {
@@ -361,9 +364,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', function ($log, $uibMo
                         $uibModalInstance.result.then(function (results) {
                             if (results) {
                                 $log.debug("Modal results: ", results);
-                                $log.debug("TODO: VALIDATION!");
-                                updateState(id);
-
+                                updateState(id, results)
                             }
                             else{
                                 $log.debug("No results");
@@ -374,13 +375,31 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', function ($log, $uibMo
                     }
                     else{
                         $log.debug("No params needed");
-                        updateState(id);
+                        updateState(id, undefined)
                     }
+
                 });
 
-            function updateState(id){
-                currentState = "state_" + event_regex.exec(id)[3];
+            String.prototype.toProperCase = function () {
+                return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+            };
+
+            function updateState(id, body){
+                var transition = event_regex.exec(id)[2].toProperCase();
+                var nextState = "state_" + event_regex.exec(id)[3];
+
+                // TODO: do the actual post
+                window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
+                $log.debug('post body: ', body);
+                currentState = nextState;
                 showSpec(currentState);
+                // $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
+                //     .then(function(results){
+                //         $log.debug('process results from HTTP POST and update state');
+                //
+                //     }, function (error){
+                //         $log.error("Error updating state", error);
+                //     });
             }
 
             // reset graph with click on init node
@@ -389,10 +408,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', function ($log, $uibMo
                     return state_regex.exec(id)[1] === "init";
                 })
                 .on("click", function (id) {
-                    $http.get(vm.apiPrefix + vm.selectedSpec.name + id + '/')
+                    $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
                         .then(function(results){
                             $log.debug('api call: Retrieve specification data');
                             vm.specData = results.data;
+                        }, function(error){
+                            $log.error("Could not retrieve specs for id ", id, error);
                         });
                     currentState = id;
                     showSpec(currentState);
