@@ -28,21 +28,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
-    // function modaltest(){
-    //     console.log("in modaltest");
-    //     var $uibModalInstance = $uibModal.open({
-    //         backdrop: true,
-    //         animation: false,
-    //         templateUrl: 'test.tpl.html',
-    //         controller: 'testModalCtrl',
-    //         controllerAs: 'tvm'
-    //
-    //     });
-    //     $uibModalInstance.result.then(function (ok){
-    //         console.log("ok");
-    //     })
-    // }
-
     function showSpec(currentState) {
         // $log.debug(specs);
         // $log.debug(specs[0]);
@@ -56,9 +41,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         // vm.graph = g;
         // $log.debug(g.graph._label.height);
         vm.w = g.graph._label.width;
-        // vm.h = g.graph._label.height;
+        vm.h = g.graph._label.height;
     }
 
+    /**
+     * Created by bc27wo on 14/11/2016.
+     */
     var SpecRenderer = function () {
         var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
                                       fields, events, states, transitions, externalMachines,
@@ -128,6 +116,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             g.setNode(groupId, {
                 labelType: "html",
                 clusterLabelPos: "top",
+                clusterLabelColor: "#000",
                 label: groupLabel,
                 class: "groupLabel"
             });
@@ -155,7 +144,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 g.setNode(state.id, {
                     label: state.label,
                     shape: state.initial ? "initial" : state.final ? "final" : "rect",
-                    style: state.id === currentState ? state.final ? "fill: #f00" : "fill: #afa" : state.initial || state.final ? "fill: #000" : "fill: #f0f",
+                    style: state.id === currentState ? state.final ? "fill: #f00" : "fill: #afa" : state.initial || state.final ? "fill: #000" : "fill: #fff",
                     class: "stateNode"
                 });
                 g.setParent(state.id, groupId);
@@ -340,15 +329,15 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             inner.selectAll("g.node.edgeNode")
                 .filter(function (id) {
                     if(state_regex.exec(currentState)[1] === event_regex.exec(id)[1]){
-                        $log.debug("currentState: ", currentState, "id: ", id);
+                        console.debug("currentState: ", currentState, "id: ", id);
                     }
                     return state_regex.exec(currentState)[1] === event_regex.exec(id)[1];
                 })
                 .on("click", function (id) {
-                    $log.debug("Node name: ", g.node(id).params);
+                    console.debug("Node name: ", g.node(id).params);
                     if (g.node(id).params.length > 0) {
-                        $log.info("Parameters needed");
-                        $log.debug("Params: ", g.node(id).params);
+                        console.info("Parameters needed");
+                        console.debug("Params: ", g.node(id).params);
                         vm.params = g.node(id).params;
                         var $uibModalInstance = $uibModal.open({
                             animation: true,
@@ -363,18 +352,18 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         });
                         $uibModalInstance.result.then(function (results) {
                             if (results) {
-                                $log.debug("Modal results: ", results);
+                                console.debug("Modal results: ", results);
                                 updateState(id, results)
                             }
                             else{
-                                $log.debug("No results");
+                                console.debug("No results");
                             }
                         }, function(error){
-                            $log.error("error: ", error);
+                            console.error("error: ", error);
                         })
                     }
                     else{
-                        $log.debug("No params needed");
+                        console.debug("No params needed");
                         updateState(id, undefined)
                     }
 
@@ -390,15 +379,15 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
                 // TODO: do the actual post
                 window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
-                $log.debug('post body: ', body);
+                console.debug('post body: ', body);
                 currentState = nextState;
                 showSpec(currentState);
                 // $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
                 //     .then(function(results){
-                //         $log.debug('process results from HTTP POST and update state');
+                //         console.debug('process results from HTTP POST and update state');
                 //
                 //     }, function (error){
-                //         $log.error("Error updating state", error);
+                //         console.error("Error updating state", error);
                 //     });
             }
 
@@ -410,10 +399,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 .on("click", function (id) {
                     $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
                         .then(function(results){
-                            $log.debug('api call: Retrieve specification data');
+                            console.debug('api call: Retrieve specification data');
                             vm.specData = results.data;
                         }, function(error){
-                            $log.error("Could not retrieve specs for id ", id, error);
+                            console.error("Could not retrieve specs for id ", id, error);
                         });
                     currentState = id;
                     showSpec(currentState);
@@ -452,6 +441,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             render: renderSpecification
         }
     }();
+
+
 
     function transition() {
         var $uibModalInstance = $uibModal.open({
