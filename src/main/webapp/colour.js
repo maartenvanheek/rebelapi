@@ -1,5 +1,5 @@
 less = {
-    env: "development"
+    env: "production"
 };
 function changeColour(colour) {
     switch (colour) {

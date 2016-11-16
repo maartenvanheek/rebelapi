@@ -10,8 +10,8 @@
     <!--Original scripts-->
     <script src="lib/external/d3.v3.min.js" charset="utf-8"></script>
     <script src="lib/external/dagre-d3.js"></script>
-    <!--<script src="lib/external/micromarkdown.js"></script>-->
-    <!--<script src="lib/external/tipsy.js"></script>-->
+    <script src="lib/external/micromarkdown.js"></script>
+    <script src="lib/external/tipsy.js"></script>
 
 
     <script src="specifications.js"></script>
@@ -32,7 +32,7 @@
     <!--<link rel="stylesheet" href="lib/layout.css">-->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <!--<link rel="stylesheet" href="lib/external/reset.css">-->
-    <!--<link rel="stylesheet" href="lib/external/tipsy.css">-->
+    <link rel="stylesheet" href="lib/external/tipsy.css">
 
     <script src="colour.js"></script>
     <link rel="stylesheet/less" href="lib/graph.less">
@@ -51,12 +51,9 @@
                     ng-options="spec.name for spec in vm.specs"
                     ng-model="vm.selectedSpec"
                     ng-change="vm.showSpec()"></select>
-
-            <!--{{vm.selectedSpec.name}}-->
             <button ng-click="vm.showSpec()">Show</button>
         </div>
     </form>
-    <!--{{vm.w}}, {{vm.h}}-->
 </div>
 
 <div class="col-md-2" id="devdiv">
@@ -64,6 +61,10 @@
         <label for="devmode"><span>Dev </span>
             <input id="devmode" class="pull-right" type="checkbox" ng-model="vm.devmode" ng-change="vm.toggleDev()">
         </label>
+    </div>
+    <div ng-show="vm.devmode">
+        <p>Graph w, h: {{vm.w|number:1}}, {{vm.h|number:1}}</p>
+        <button ng-click="vm.apitest()">Test API (POST)</button>
     </div>
 </div>
 

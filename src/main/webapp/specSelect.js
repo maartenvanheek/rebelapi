@@ -12,15 +12,19 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.transition = transition;
     vm.toggleDev = toggleDev;
 
+    vm.apitest = apitest;
+
     // maybe need a prefix for the api?
     vm.server = 'http://localhost:8080/';
     vm.apiPrefix = '';
     vm.machineId = 1; //TODO: not sure yet where we get/store this id
     vm.specData = undefined; //TODO: this is meant to come from HTTP GET
-    vm.devmode = false;
+    vm.devmode = true;
 
     //default spec (so you don't have to pick one always)
     vm.selectedSpec = specs[0];
+
+    vm.transitionId = undefined;
 
     // initial size of graph (not relevant??)
     vm.h = $window.innerHeight;
@@ -35,10 +39,18 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         vm.devmode? changeColour('dev') : changeColour();
     }
 
+    function apitest(){
+        var url = vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/Create/';
+        $log.debug("Attempting to post to " + url);
+        $http.post(url)
+            .then(function(results){
+                $log.info("POST succes", results);
+            }, function (error){
+                $log.warn("POST failed: ", error);
+            });
+    }
+
     function showSpec(currentState) {
-        // $log.debug(specs);
-        // $log.debug(specs[0]);
-        // $log.debug(vm.selectedSpec);
         if (currentState === undefined) {
             currentState = "state_init";
         }
@@ -47,14 +59,15 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         $log.debug("Graph: ", g);
         // vm.graph = g;
         // $log.debug(g.graph._label.height);
-        vm.w = g.graph._label.width;
-        vm.h = g.graph._label.height;
+        // this will resize the available size to the scale == 1 size of your svg graph
+        // vm.w = g.graph._label.width;
+        // vm.h = g.graph._label.height;
     }
 
-    /**
-     * Created by bc27wo on 14/11/2016.
-     */
     var SpecRenderer = function () {
+        var state_regex = /state_([a-zA-Z]+)/;
+        var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
+
         var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
                                       fields, events, states, transitions, externalMachines,
                                       transitionsToExternalMachines, transitionsFromExternalMachines) {
@@ -150,7 +163,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             specification.states.forEach(function (state) {
                 g.setNode(state.id, {
                     label: state.label,
-                    shape: state.initial ? "initial" : state.final ? "final" : "rect",
+                    shape: state.initial ? "initial" : state.final ? "final" : "state",
                     style: state.id === currentState ? state.final ? "fill: #f00" : "fill: #afa" : state.initial || state.final ? "fill: #000" : "fill: #fff",
                     class: "stateNode"
                 });
@@ -172,7 +185,20 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
                 g.setParent(event.id, groupId);
             });
+/*
+            // This would draw the edges directly. But
+            specification.events.forEach(function (event){
+                $log.debug("Event: ", event);
+                var from = "state_" + event_regex.exec(event.id)[1];
+                var to = "state_" + event_regex.exec(event.id)[3];
+                var lbl = event_regex.exec(event.id)[2];
+                g.setEdge(from, to, {
+                    label: lbl,
+                    lineInterpolate: 'basis'
+                });
+            });
 
+*/
             function getLabelOfExternalMachine(external) {
                 var label = external.url !== "?" ? "<a href='#" + external.url + "'>" + external.label + "</a>" : external.label;
                 switch (external.referenceType) {
@@ -221,7 +247,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         var renderSpecification = function (specification, currentState, svgDomElement) {
             var g = buildGraph(specification, currentState);
 
-            //d3.selectAll("svg > g > *").remove();
             svgDomElement.select("g").remove();
             svgDomElement.insert("g");
 
@@ -246,6 +271,23 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         .attr("r", 10)
                         .attr("label", "")
                         .attr("class", "initial");
+
+                node.intersect = function (point) {
+                    return dagreD3.intersect.circle(node, 10, point);
+                };
+
+                return shapeSvg;
+            };
+
+            render.shapes().state = function (parent, bbox, node) {
+                var w = bbox.width,
+                    h = bbox.height,
+                    shapeSvg = parent.insert("circle")
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", 50)
+                        .attr("class", "state")
+                        .attr("stroke", "#fff");
 
                 node.intersect = function (point) {
                     return dagreD3.intersect.circle(node, 10, point);
@@ -320,17 +362,15 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // Run the renderer. This is what draws the final graph.
             render(inner, g);
 
-            // inner.selectAll("g.node.edgeNode")
-            //     .attr("title", function (v) {
-            //         // console.log("v: ", v);
-            //         return styleTooltip(g.node(v));
-            //     })
-            //     .each(function (v) {
-            //         $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
-            //     });
-
-            var state_regex = /state_([a-zA-Z]+)/;
-            var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
+            // tooltips
+            inner.selectAll("g.node.edgeNode")
+                .attr("title", function (v) {
+                    console.log("v: ", v);
+                    return styleTooltip(g.node(v));
+                })
+                .each(function (v) {
+                    $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
+                });
 
             // select only edgenodes (i.e. transition label) that has FROM currentState
             inner.selectAll("g.node.edgeNode")
@@ -389,13 +429,13 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 console.debug('post body: ', body);
                 currentState = nextState;
                 showSpec(currentState);
-                // $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
-                //     .then(function(results){
-                //         console.debug('process results from HTTP POST and update state');
-                //
-                //     }, function (error){
-                //         console.error("Error updating state", error);
-                //     });
+                $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
+                    .then(function(results){
+                        console.debug('process results from HTTP POST and update state');
+
+                    }, function (error){
+                        console.error("Error updating state", error);
+                    });
             }
 
             // reset graph with click on init node
@@ -416,6 +456,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
 
             var initialPlacement = function (svgViewport) {
+                $log.debug("initial place: ", svgViewport.width(), svgViewport.height());
                 var viewportWidth = svgViewport.width();
                 var viewportHeight = svgViewport.height();
 
@@ -436,9 +477,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             return {
-                graph: g,
-                initialPlacement: initialPlacement,
-                currentState: currentState
+                // graph: g, // this return makes the svg#traph size down to exactly the rectangle size
+                // initialPlacement: initialPlacement,
+                // currentState: currentState
             }
         };
 
