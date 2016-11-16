@@ -1,17 +1,17 @@
 less = {
     env: "development"
 };
-function changeColor(color) {
-    switch (color) {
+function changeColour(colour) {
+    switch (colour) {
         case 'dev':
             less.modifyVars({
                 '@dash': 'gray',
                 '@black': 'black',
                 '@text': 'black',
-                '@edgeNode': 'white',
-                '@background': 'white',
+                '@edgeNode': 'lightblue',
+                '@background': 'pink',
                 '@external': 'lightgray',
-                '@graphTitle': 'black',
+                '@graphTitle': 'green',
                 '@fieldsBox': 'lightgray',
                 '@fieldsText': 'black',
                 '@uncertain': 'magenta',
@@ -24,11 +24,11 @@ function changeColor(color) {
                 '@black': 'black',
                 '@text': 'black',
                 '@edgeNode': 'white',
-                '@background': 'pink',
+                '@background': 'white',
                 '@external': 'lightgray',
-                '@graphTitle': 'green',
-                '@fieldsBox': 'gray',
-                '@fieldsText': 'lightblue',
+                '@graphTitle': 'black',
+                '@fieldsBox': 'lightgray',
+                '@fieldsText': 'black',
                 '@uncertain': 'magenta',
                 '@uncertain2': 'yellow'
             });

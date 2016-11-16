@@ -34,59 +34,16 @@
     <!--<link rel="stylesheet" href="lib/external/reset.css">-->
     <!--<link rel="stylesheet" href="lib/external/tipsy.css">-->
 
-    <!--<link rel="stylesheet" href="lib/graph.css">-->
+    <script src="colour.js"></script>
     <link rel="stylesheet/less" href="lib/graph.less">
-    <script>
-        less = {
-            env: "development"
-        };
-        function changeColor(color) {
-            switch (color) {
-                case 'dev':
-                    less.modifyVars({
-                        '@dash': 'gray',
-                        '@black': 'black',
-                        '@text': 'black',
-                        '@edgeNode': 'white',
-                        '@background': 'pink',
-                        '@external': 'lightgray',
-                        '@graphTitle': 'green',
-                        '@fieldsBox': 'gray',
-                        '@fieldsText': 'lightblue',
-                        '@uncertain': 'magenta',
-                        '@uncertain2': 'yellow'
-                    });
-                    break;
-                default: {
-                    less.modifyVars({
-                        '@dash': 'gray',
-                        '@black': 'black',
-                        '@text': 'black',
-                        '@edgeNode': 'white',
-                        '@background': 'white',
-                        '@external': 'lightgray',
-                        '@graphTitle': 'black',
-                        '@fieldsBox': 'lightgray',
-                        '@fieldsText': 'black',
-                        '@uncertain': 'magenta',
-                        '@uncertain2': 'yellow'
-                    });
-                }
-            }
-
-        }
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.7.1/less.min.js"></script>
 </head>
 
 <body ng-app="visualApp" ng-controller="specCtrl as vm" grph>
-<div class="col-md-12">
-    <span class="pull-right"><a href="javascript: changeColor('dev');">
-        <i class="glyphicon glyphicon-cog"></i></a>
-    </span>
+
+<div class="col-md-10">
     <h1>Interactive Specification Visualiser</h1>
     <!--<p>Params: {{vm.params}}</p>-->
-
     <form name="selectionForm" class="form-vertical">
         <div class="form-group">
             <label for="specSelect">Select specification:</label>
@@ -102,26 +59,33 @@
     <!--{{vm.w}}, {{vm.h}}-->
 </div>
 
-<div id="x" class="col-md-12">
-    <!--<h2>Visualisation</h2>-->
-    <!--<p>{{vm.lipsum}}</p>-->
-    <!--<div id="leftfields" class="col-md-1">-->
-    <!--<h2>Left</h2>-->
-    <!--{{vm.specData}}-->
-    <!--</div>-->
-    <!--<div id="rightfields" class="col-md-1">-->
-    <!--<h2>Right</h2>-->
-    <!--</div>-->
-    <div id="viz" class="col-md-12">
+<div class="col-md-2" id="devdiv">
+    <div class="pull-right">
+        <label for="devmode"><span>Dev </span>
+            <input id="devmode" class="pull-right" type="checkbox" ng-model="vm.devmode" ng-change="vm.toggleDev()">
+        </label>
+    </div>
+</div>
+
+<div class="col-md-12" id="visualisation">
+    <div id="fields">
+        <!--<h2>Visualisation</h2>-->
+        <!--<p>{{vm.lipsum}}</p>-->
+        <!--<div id="leftfields" class="col-md-1">-->
+        <!--<h2>Left</h2>-->
+        <!--{{vm.specData}}-->
+        <!--</div>-->
+        <!--<div id="rightfields" class="col-md-1">-->
+        <!--<h2>Right</h2>-->
+        <!--</div>-->
+    </div>
+    <div id="svg" class="col-md-12">
         <svg id="graph" xmlns="http://www.w3.org/2000/svg" width="{{vm.w}}"
              height="{{vm.h}}" viewBox="0 0 {{vm.w}} {{vm.h}}" preserveAspectRatio="true">
             <g/> <!--vziw doet dit niets. SVG attribuut , geen idee: viewBox="0 0 10 200"-->
         </svg>
     </div>
-
 </div>
-
-
 </body>
 </html>
 

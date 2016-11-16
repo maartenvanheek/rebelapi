@@ -10,13 +10,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.specs = specs;
     vm.showSpec = showSpec;
     vm.transition = transition;
-    // vm.modaltest = modaltest;
+    vm.toggleDev = toggleDev;
 
     // maybe need a prefix for the api?
     vm.server = 'http://localhost:8080/';
     vm.apiPrefix = '';
     vm.machineId = 1; //TODO: not sure yet where we get/store this id
     vm.specData = undefined; //TODO: this is meant to come from HTTP GET
+    vm.devmode = false;
 
     //default spec (so you don't have to pick one always)
     vm.selectedSpec = specs[0];
@@ -27,6 +28,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
+
+    function toggleDev(){
+        $log.debug("Devmode is now ", vm.devmode);
+        vm.devmode? $log.debug("Yes") : $log.debug("No.");
+        vm.devmode? changeColour('dev') : changeColour();
+    }
 
     function showSpec(currentState) {
         // $log.debug(specs);
