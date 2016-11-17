@@ -10,14 +10,19 @@
     }
     
     function Tipsy(element, options) {
-        this.$element = $(element);
+        // dbg TIPSY: this is not playing well with newer jquery
+        // console.log("dbg TIPSY Tipsy(element, options)"); // dbg LAST REACHED in ng code ONLY CALLED ONCE
+        this.$element = $(element); //dbg with this line it gives the error "$e.context is undefined" ONLY in ng vis
+        // this.$element = element; // dbg If I do this it gives the error "$e.attr is not a function" bot in js and ng visualiser
         this.options = options;
         this.enabled = true;
         this.fixTitle();
+        // console.log(this);
     }
     
     Tipsy.prototype = {
         show: function() {
+            // console.log("dbg TIPSY SHOW"); // dbg DOES NOT REACH in ng
             var title = this.getTitle();
             if (title && this.enabled) {
                 var $tip = this.tip();
@@ -187,6 +192,7 @@
         }
         
         function enter() {
+            // console.log("dbg TIPSY ENTER");
             var tipsy = get(this);
             tipsy.hoverState = 'in';
             if (options.delayIn === 0) {
@@ -198,6 +204,7 @@
         }
         
         function leave() {
+            // console.log("dbg TIPSY LEAVE");
             var tipsy = get(this);
             tipsy.hoverState = 'out';
             if (options.delayOut === 0) {

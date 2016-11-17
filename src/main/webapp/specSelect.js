@@ -40,13 +40,13 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     }
 
     function apitest(){
-        var url = vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/Create/';
-        $log.debug("Attempting to post to " + url);
-        $http.post(url)
+        var url = vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId;
+        $log.debug("Attempting to GET " + url);
+        $http.get(url)
             .then(function(results){
-                $log.info("POST succes", results);
+                $log.info("GET succes", results);
             }, function (error){
-                $log.warn("POST failed: ", error);
+                $log.warn("GET failed: ", error);
             });
     }
 
@@ -176,6 +176,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     label: event.label,
                     shape: "rect",
                     class: "edgeNode",
+                    title: event.id,
                     doc: "doc" in event ? event.doc : "",
                     config: "config" in event ? event.config : [],
                     params: "params" in event ? event.params : [],
@@ -270,6 +271,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         .attr("cy", 0)
                         .attr("r", 10)
                         .attr("label", "")
+                        .attr("title", "INIT")
                         .attr("class", "initial");
 
                 node.intersect = function (point) {
@@ -286,6 +288,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         .attr("cx", 0)
                         .attr("cy", 0)
                         .attr("r", 50)
+                        .attr("title", "STATE")
                         .attr("class", "state")
                         .attr("stroke", "#fff");
 
@@ -305,6 +308,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     .attr("cx", 0)
                     .attr("cy", 0)
                     .attr("r", 10)
+                    .attr("title", "FINAL")
                     .attr("stroke", "#000")
                     .attr("fill-opacity", "0")
                     .attr("label", "")
@@ -355,7 +359,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 content += edgeNode.preconditions.length > 0 ? createPart("Preconditions", preprocessStatements(edgeNode.preconditions)) : "";
                 content += edgeNode.postconditions.length > 0 ? createPart("Postconditions", preprocessStatements(edgeNode.postconditions)) : "";
                 content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
-
+                // console.log(content);
                 return content;
             };
 
@@ -365,11 +369,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // tooltips
             inner.selectAll("g.node.edgeNode")
                 .attr("title", function (v) {
-                    console.log("v: ", v);
                     return styleTooltip(g.node(v));
                 })
                 .each(function (v) {
-                    $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
+                    // dbg: this function is called once upon generation of the graph (and then prepares all tooltips??)
+                    // $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
                 });
 
             // select only edgenodes (i.e. transition label) that has FROM currentState

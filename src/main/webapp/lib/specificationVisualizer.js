@@ -269,7 +269,7 @@ var SpecRenderer = function () {
                 return styleTooltip(g.node(v));
             })
             .each(function (v) {
-                $(vm).tipsy({gravity: "w", opacity: 0.8, html: true});
+                $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
             });
 
         var state_regex = /state_([a-zA-Z]+)/;

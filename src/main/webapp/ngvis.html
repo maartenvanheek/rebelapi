@@ -3,15 +3,15 @@
 <head>
     <meta charset="utf-8">
     <title>Rebel Specification Viewer</title>
-    <script src="https://code.jquery.com/jquery-3.1.1.js"
-            integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
-            crossorigin="anonymous"></script>
+    <!--<script src="lib/external/jquery-1.12.0.min.js"></script>-->
+    <script src="https://code.jquery.com/jquery-3.1.1.js"></script>
 
     <!--Original scripts-->
     <script src="lib/external/d3.v3.min.js" charset="utf-8"></script>
     <script src="lib/external/dagre-d3.js"></script>
     <script src="lib/external/micromarkdown.js"></script>
-    <script src="lib/external/tipsy.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tipsy/1.0.3/jquery.tipsy.js"></script>-->
+    <!--<script src="lib/external/tipsy.js"></script>-->
 
 
     <script src="specifications.js"></script>
@@ -26,21 +26,21 @@
     <!--Angular application-->
     <script src="application.js"></script>
     <script src="specSelect.js"></script>
-    <script src="renderer.js"></script>
 
     <!--CSS-->
     <!--<link rel="stylesheet" href="lib/layout.css">-->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <!--<link rel="stylesheet" href="lib/external/reset.css">-->
-    <link rel="stylesheet" href="lib/external/tipsy.css">
+    <!--<link rel="stylesheet" href="lib/external/tipsy.css">-->
 
-    <script src="colour.js"></script>
-    <link rel="stylesheet/less" href="lib/graph.less">
+    <script src="css/colour.js"></script>
+    <link rel="stylesheet/less" href="css/graph.less">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.7.1/less.min.js"></script>
+
+    <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 </head>
 
 <body ng-app="visualApp" ng-controller="specCtrl as vm" grph>
-
 <div class="col-md-10">
     <h1>Interactive Specification Visualiser</h1>
     <!--<p>Params: {{vm.params}}</p>-->
@@ -64,7 +64,7 @@
     </div>
     <div ng-show="vm.devmode">
         <p>Graph w, h: {{vm.w|number:1}}, {{vm.h|number:1}}</p>
-        <button ng-click="vm.apitest()">Test API (POST)</button>
+        <button ng-click="vm.apitest()">Test API (GET)</button>
     </div>
 </div>
 
@@ -97,4 +97,21 @@
 
     .cluster
 </style>
+<!--http://jsfiddle.net/FFxZ3/6/-->
+<script>
+    $(document).ready(function() {
+        $( document ).tooltip( { track: true, position: { my: "left top+20 center", at: "right center" } } );
+    });
 
+    $("rect").mouseover(function() {
+        $(this).tooltip({
+            items: "rect",
+//            content: "This is Awesome!",
+            content: function () { return $("title").html(); },
+            track: true,
+            position: {
+                my: "left top+20 center",
+                at: "right center" }
+        });
+    });
+</script>
