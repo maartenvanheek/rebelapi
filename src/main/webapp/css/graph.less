@@ -9,6 +9,7 @@
 @fieldsText: black;
 @uncertain: magenta;
 @uncertain2: yellow;
+@previousPath: blue;
 
 //html,body {
 //    /*font: 300 14px 'Helvetica Neue', Helvetica;*/
@@ -178,4 +179,18 @@
     stroke-width: 1.5px;
     stroke: @uncertain;
     /*fill: #aaa*/
+}
+
+
+
+.edgePath.previous path {
+    stroke: @previousPath;
+    fill: none;
+    stroke-width: 3px;
+}
+
+.arrowhead.previous {
+    stroke: @previousPath;
+    //fill: @previousPath;
+    //stroke-width: 3px;
 }

@@ -69,6 +69,12 @@
         <p>Graph w, h: {{vm.w|number:1}}, {{vm.h|number:1}}</p>
         <button ng-click="vm.apitest()">Test API (GET)</button>
     </div>
+    <div ng-show="vm.devmode">
+        <p>Previous state:</p>
+        <p ng-repeat="state in vm.previousState">{{state}}</p>
+        <!--{{vm.previousState}}-->
+        <hr>
+    </div>
 </div>
 
 <div class="col-md-12" id="visualisation">

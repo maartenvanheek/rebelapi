@@ -13,6 +13,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.toggleDev = toggleDev;
 
     vm.apitest = apitest;
+    vm.reset = reset;
 
     // maybe need a prefix for the api?
     vm.server = 'http://localhost:8080/';
@@ -30,24 +31,39 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.h = $window.innerHeight;
     vm.w = $window.innerWidth;
 
+    // track previous states to show progress
+    vm.previousState = [];
+
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
-    function toggleDev(){
+    function toggleDev() {
         $log.debug("Devmode is now ", vm.devmode);
-        vm.devmode? $log.debug("Yes") : $log.debug("No.");
-        vm.devmode? changeColour('dev') : changeColour();
+        vm.devmode ? $log.debug("Yes") : $log.debug("No.");
+        vm.devmode ? changeColour('dev') : changeColour();
     }
 
-    function apitest(){
+    function apitest() {
         var url = vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId;
         $log.debug("Attempting to GET " + url);
         $http.get(url)
-            .then(function(results){
+            .then(function (results) {
                 $log.info("GET succes", results);
-            }, function (error){
+            }, function (error) {
                 $log.warn("GET failed: ", error);
             });
+    }
+
+    function reset() {
+        vm.previousState = [];
+        $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
+            .then(function (results) {
+                console.debug('api call: Retrieve specification data');
+                vm.specData = results.data;
+            }, function (error) {
+                console.error("Could not retrieve specs ", error);
+            });
+        showSpec();
     }
 
     function showSpec(currentState) {
@@ -65,6 +81,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
 
     }
+
     var SpecRenderer = function () {
         var state_regex = /state_([a-zA-Z]+)/;
         var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
@@ -168,7 +185,17 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     style: state.id === currentState ? state.final ? "fill: #f00" : "fill: #afa" : state.initial || state.final ? "fill: #000" : "fill: #fff",
                     class: "stateNode"
                 });
+                if (vm.previousState.indexOf(state.id) > -1) {
+                    g.setNode(state.id, {
+                        style: "fill: #f0f"
+                    })
+                }
                 g.setParent(state.id, groupId);
+            });
+
+            // try a filter approach
+            specification.states.forEach(function (state) {
+
             });
 
             // add events
@@ -216,8 +243,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             // Set up internal edges
             specification.transitions.forEach(function (trans) {
-                g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: "basis"});
-                g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis"});
+                if (vm.previousState.indexOf(trans.via) > -1) {
+                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: "basis", class: "previous"});
+                    g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis", class: "previous", arrowheadClass: "arrowhead.previous"});
+                }
+                else {
+                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: "basis"});
+                    g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis"});
+                }
             });
 
             // set up external edges
@@ -380,7 +413,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // select only edgenodes (i.e. transition label) that has FROM currentState
             inner.selectAll("g.node.edgeNode")
                 .filter(function (id) {
-                    if(state_regex.exec(currentState)[1] === event_regex.exec(id)[1]){
+                    if (state_regex.exec(currentState)[1] === event_regex.exec(id)[1]) {
                         console.debug("currentState: ", currentState, "id: ", id);
                     }
                     return state_regex.exec(currentState)[1] === event_regex.exec(id)[1];
@@ -407,14 +440,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                                 console.debug("Modal results: ", results);
                                 updateState(id, results)
                             }
-                            else{
+                            else {
                                 console.debug("No results");
                             }
-                        }, function(error){
+                        }, function (error) {
                             console.error("error: ", error);
                         })
                     }
-                    else{
+                    else {
                         console.debug("No params needed");
                         updateState(id, undefined)
                     }
@@ -422,23 +455,28 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
 
             String.prototype.toProperCase = function () {
-                return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+                return this.replace(/\w\S*/g, function (txt) {
+                    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                });
             };
 
-            function updateState(id, body){
+            function updateState(id, body) {
                 var transition = event_regex.exec(id)[2].toProperCase();
                 var nextState = "state_" + event_regex.exec(id)[3];
 
                 // TODO: do the actual post
-                window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
-                console.debug('post body: ', body);
-                currentState = nextState;
-                showSpec(currentState);
-                $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
-                    .then(function(results){
-                        console.debug('process results from HTTP POST and update state');
-
-                    }, function (error){
+                // window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
+                // $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
+                $http.get('http://localhost:8080/IngNLAccount/1/')
+                // $http.post('http://localhost:8080/OnUsCreditTransferNL/1/Create', body) //it's pretty impossible to derive the right body shape :/
+                    .then(function (results) {
+                        console.debug('STUBSTUB: this just proves that the server is up. Does not actually have functionality.');
+                        // push old state and transition
+                        vm.previousState.push(id);
+                        vm.previousState.push(currentState);
+                        currentState = nextState;
+                        showSpec(currentState);
+                    }, function (error) {
                         console.error("Error updating state", error);
                     });
             }
@@ -449,15 +487,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     return state_regex.exec(id)[1] === "init";
                 })
                 .on("click", function (id) {
-                    $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
-                        .then(function(results){
-                            console.debug('api call: Retrieve specification data');
-                            vm.specData = results.data;
-                        }, function(error){
-                            console.error("Could not retrieve specs for id ", id, error);
-                        });
-                    currentState = id;
-                    showSpec(currentState);
+                    vm.reset();
+
                 });
 
             var initialPlacement = function (svgViewport) {
@@ -494,9 +525,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             render: renderSpecification
         }
     }();
-
-
-
 
 
     function transition() {
