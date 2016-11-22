@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Rebel Specification Viewer</title>
-    <!--<script src="lib/external/jquery-1.12.0.min.js"></script>-->
-    <script src="https://code.jquery.com/jquery-3.1.1.js"></script>
+    <title><b>Rebel</b> Specification Viewer</title>
+    <script src="lib/external/jquery-1.12.0.min.js"></script>
+    <!--<script src="https://code.jquery.com/jquery-3.1.1.js"></script>-->
 
     <!--Original scripts-->
     <script src="lib/external/d3.v3.min.js" charset="utf-8"></script>
     <script src="lib/external/dagre-d3.js"></script>
     <script src="lib/external/micromarkdown.js"></script>
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tipsy/1.0.3/jquery.tipsy.js"></script>-->
-    <!--<script src="lib/external/tipsy.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tipsy/1.0.3/jquery.tipsy.js"></script>
+    <script src="lib/external/tipsy.js"></script>
 
 
     <script src="specifications.js"></script>
@@ -31,13 +31,16 @@
     <!--<link rel="stylesheet" href="lib/layout.css">-->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <!--<link rel="stylesheet" href="lib/external/reset.css">-->
-    <!--<link rel="stylesheet" href="lib/external/tipsy.css">-->
+    <link rel="stylesheet" href="lib/external/tipsy.css">
 
     <script src="css/colour.js"></script>
     <link rel="stylesheet/less" href="css/graph.less">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.7.1/less.min.js"></script>
 
-    <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!--<script src="specRender.js"></script>-->
+    <!--<script src="lib/external/d3tip.js"></script>-->
+    <!--<script src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
 </head>
 
 <body ng-app="visualApp" ng-controller="specCtrl as vm" grph>
@@ -69,17 +72,6 @@
 </div>
 
 <div class="col-md-12" id="visualisation">
-    <div id="fields">
-        <!--<h2>Visualisation</h2>-->
-        <!--<p>{{vm.lipsum}}</p>-->
-        <!--<div id="leftfields" class="col-md-1">-->
-        <!--<h2>Left</h2>-->
-        <!--{{vm.specData}}-->
-        <!--</div>-->
-        <!--<div id="rightfields" class="col-md-1">-->
-        <!--<h2>Right</h2>-->
-        <!--</div>-->
-    </div>
     <div id="svg" class="col-md-12">
         <svg id="graph" xmlns="http://www.w3.org/2000/svg" width="{{vm.w}}"
              height="{{vm.h}}" viewBox="0 0 {{vm.w}} {{vm.h}}" preserveAspectRatio="true">
@@ -98,20 +90,26 @@
     .cluster
 </style>
 <!--http://jsfiddle.net/FFxZ3/6/-->
+<!-- THIS is for jqueryuitooltip
 <script>
-    $(document).ready(function() {
-        $( document ).tooltip( { track: true, position: { my: "left top+20 center", at: "right center" } } );
-    });
-
-    $("rect").mouseover(function() {
-        $(this).tooltip({
-            items: "rect",
-//            content: "This is Awesome!",
-            content: function () { return $("title").html(); },
-            track: true,
+    $(document).ready(function () {
+        console.log("dbg: doc ready");
+        $(document).tooltip({
+            // dbg: if I leave the content out, I get the tooltip contents at the right place, but unformatted.
+            // if I add this content, it is styled HTML, but static, and in the wrong position
+            // also, I still get one example of it in the top right of my html file.
+            //#1: static content
+//            content: "<h1>Awesome</h1> content",
+            //#2: function content. Does not work. With return $("title") it returns the html title
+//            content: function () {
+//                console.log('content function');
+//                console.log($(this));
+//                return $(this).prop('title');
+//            },
+            track: false,
             position: {
-                my: "left top+20 center",
-                at: "right center" }
+                my: "left top+20 center", at: "right center"
+            }
         });
     });
-</script>
+</script>-->

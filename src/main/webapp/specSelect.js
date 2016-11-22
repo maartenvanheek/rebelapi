@@ -62,8 +62,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         // this will resize the available size to the scale == 1 size of your svg graph
         // vm.w = g.graph._label.width;
         // vm.h = g.graph._label.height;
-    }
 
+
+    }
     var SpecRenderer = function () {
         var state_regex = /state_([a-zA-Z]+)/;
         var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
@@ -186,20 +187,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
                 g.setParent(event.id, groupId);
             });
-/*
-            // This would draw the edges directly. But
-            specification.events.forEach(function (event){
-                $log.debug("Event: ", event);
-                var from = "state_" + event_regex.exec(event.id)[1];
-                var to = "state_" + event_regex.exec(event.id)[3];
-                var lbl = event_regex.exec(event.id)[2];
-                g.setEdge(from, to, {
-                    label: lbl,
-                    lineInterpolate: 'basis'
-                });
-            });
 
-*/
             function getLabelOfExternalMachine(external) {
                 var label = external.url !== "?" ? "<a href='#" + external.url + "'>" + external.label + "</a>" : external.label;
                 switch (external.referenceType) {
@@ -271,9 +259,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         .attr("cy", 0)
                         .attr("r", 10)
                         .attr("label", "")
-                        .attr("title", "INIT")
                         .attr("class", "initial");
-
                 node.intersect = function (point) {
                     return dagreD3.intersect.circle(node, 10, point);
                 };
@@ -329,6 +315,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             var styleTooltip = function (edgeNode) {
                 function createPart(title, items) {
+                    // this function is called upon rendering for all relevant items (not upon mouseover)
+                    // console.log("dbg: styleTooltip");
                     var result = "<h1>" + title + "</h1>";
                     for (var i = 0; i < items.length; i++) {
                         result += items[i];
@@ -372,9 +360,22 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     return styleTooltip(g.node(v));
                 })
                 .each(function (v) {
-                    // dbg: this function is called once upon generation of the graph (and then prepares all tooltips??)
-                    // $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
+                    // dbg: this function is called upon generation of the graph, once for each tooltip
+                    $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
+                    // $(this).tooltip({content: v});
+                    // $(this).tooltip({
+                    //     content: function () {
+                    //         return v;
+                    //     }
+                    // });
                 });
+            /*
+             // THIS DOES NOT WORK
+             inner.selectAll("g.node.edgeNode")
+             .on("mouseover", function (){
+             console.log("mouseover");
+             tooltip.style("opacity", "1");
+             });*/
 
             // select only edgenodes (i.e. transition label) that has FROM currentState
             inner.selectAll("g.node.edgeNode")
@@ -493,6 +494,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             render: renderSpecification
         }
     }();
+
+
 
 
 
