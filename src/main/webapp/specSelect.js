@@ -9,6 +9,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     vm.specs = specs;
     vm.showSpec = showSpec;
+    vm.startSpec = startSpec;
     vm.transition = transition;
     vm.toggleDev = toggleDev;
 
@@ -33,6 +34,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     // track previous states to show progress
     vm.previousState = [];
+    vm.availableEvent = [];
 
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
@@ -56,6 +58,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     function reset() {
         vm.previousState = [];
+        vm.availableEvent = [];
         $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
             .then(function (results) {
                 console.debug('api call: Retrieve specification data');
@@ -72,14 +75,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         }
         var svg = d3.select("svg");
         var g = (vm.selectedSpec !== undefined) ? SpecRenderer.render(vm.selectedSpec, currentState, svg) : SpecRenderer.render(noSpecFound, null, svg);
-        $log.debug("Graph: ", g);
-        // vm.graph = g;
-        // $log.debug(g.graph._label.height);
-        // this will resize the available size to the scale == 1 size of your svg graph
-        // vm.w = g.graph._label.width;
-        // vm.h = g.graph._label.height;
+    }
 
-
+    function startSpec(){
+        // this should fire the initial spec thing
+        vm.showSpec();
     }
 
     var SpecRenderer = function () {
@@ -176,103 +176,89 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
                 g.setParent(fieldsId, groupId);
             }
-/*
-            // Add states
-            specification.states.forEach(function (state) {
-                $log.debug("State: ", state);
-                g.setNode(state.id, {
-                    // shape: state.initial ? "initial" : state.final ? "final" : "rect",
-                    shape: state.initial ? "initial" : state.final ? "final" : "circle",
-                    label: state.label,
-                    style: state.id === currentState ? state.final ? "fill: #f00" : "fill: #afa" : state.initial || state.final ? "fill: #000" : "fill: #fff",
-                    class: "stateNode"
-                });
-                if (vm.previousState.indexOf(state.id) > -1) {
-                    g.setNode(state.id, {
-                        // shape: "circle",
-                        // style: "fill: #f0f",
-                        class: "previousNode"
-                    })
-                }
-                else if (state.id === currentState) {
-                    if (state.initial) {
-                        // do initial formatting
-                        g.setNode(state.id, {
-                            shape: "initial",
-                            label: "",
-                            style: "fill: #afa"
-                        })
-                    }
-                    else {
-                        // do current state formatting
-                    }
-                }
-                g.setParent(state.id, groupId);
-            });*/
 
-            specification.states.forEach(function (state) {
-                if (state.initial) {
-                    g.setNode(state.id, {
-                        shape: "initial",
-                        label: ""
-                        //class: "initialNode"
-                    });
-                    if(state.id === currentState){
-                        g.setNode(state.id, {
-                            shape: "initial",
-                            label: "",
-                            class: "currentNode"
-                        });
-                    }
-                }
-                else if (state.final) {
+
+            var drawInit = function (state) {
+                g.setNode(state.id, {
+                    shape: "initial",
+                    label: "",
+                    class: "initNode"
+                });
+                // basically you don't want this
+                // if (state.id === currentState) {
+                //     g.setNode(state.id, {
+                //         shape: "initial",
+                //         label: "",
+                //         class: "initNode",
+                //         style: "fill: lightgreen"
+                //     });
+                // }
+                g.setParent(state.id, groupId);
+            };
+
+            var drawFinal = function (state) {
+                g.setNode(state.id, {
+                    shape: "final",
+                    label: "",
+                    style: "fill: black"
+                });
+                if (state.id === currentState) {
                     g.setNode(state.id, {
                         shape: "final",
                         label: "",
-                        style: "fill: black"
-                    });
-                    if (state.id === currentState) {
-                        g.setNode(state.id, {
-                            shape: "final",
-                            label: "",
-                            style: "fill: red"
-                        })
-                    }
-                }
-                else {
-                    g.setNode(state.id, {
-                        shape: "circle",
-                        label: state.label,
-                        class: "stateNode"
-                    })
-                }
-                // apply current node formatting
-                // option: do final node here, too, so it's logically together
-                if (state.id === currentState && !state.final && !state.initial) {
-                    g.setNode(state.id, {
-                        shape: "circle",
-                        class: "currentNode"
-                    })
-                }
-
-                // apply previous node formatting
-                else if (vm.previousState.indexOf(state.id) > -1) {
-                    g.setNode(state.id, {
-                        shape: "circle",
-                        class: "previousNode"
+                        style: "fill: red"
                     })
                 }
                 g.setParent(state.id, groupId);
+            };
 
+            var drawState = function (state) {
+                // ok so you can draw them as shape circle (and they get the radius from the label size)
+                // or you can do it as the initial/final state drawing... but then they won't have labels :/
+                g.setNode(state.id, {
+                    shape: "circle",
+                    // bbox: "width: 500, height: 500",
+                    label: state.label,
+                    class: "stateNode"
+                });
+                if (state.id === currentState) {
+                    g.setNode(state.id, {
+                        shape: "circle",
+                        class: "currentNode",
+                        label: state.label
+                    })
+                }
+                else if (vm.previousState.indexOf(state.id) > -1) {
+                    g.setNode(state.id, {
+                        shape: "circle",
+                        class: "previousNode",
+                        label: state.label
+                    })
+                }
+                g.setParent(state.id, groupId);
+            };
+
+            specification.states.forEach(function (state) {
+                if (state.initial) {
+                    drawInit(state)
+                }
+                else if (state.final) {
+                    drawFinal(state)
+                }
+                else {
+                    drawState(state);
+                }
+                // REVIEW: callback and assign g.setparent here instead?
+                // g.setParent(state.id, groupId);
             });
-
-            // add events
-            specification.events.forEach(function (event) {
+            var drawEvent = function (event) {
+                // $log.debug("drawEvent id:_"+event.id+"_");
+                // $log.debug("available: ", vm.availableEvent);
+                // $log.debug("previous: ", vm.previousState);
                 g.setNode(event.id, {
-                    label: event.label,
-                    shape: "rect",
+                    shape: "circle",
                     class: "edgeNode",
-                    title: event.id,
+                    label: event.label,
                     doc: "doc" in event ? event.doc : "",
                     config: "config" in event ? event.config : [],
                     params: "params" in event ? event.params : [],
@@ -280,8 +266,42 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     postconditions: "postconditions" in event ? event.postconditions : [],
                     sync: "sync" in event ? event.sync : []
                 });
+                // if (vm.availableEvent.indexOf(event.id) > -1) {
+                //     $log.debug("available!");
+                //     g.setNode(event.id, {
+                //         shape: "circle",
+                //         // TODO: very nice that you made a specific class for this but it means that they are no longer clickable :/
+                //         class: "edgeAvailable",
+                //         label: event.label,
+                //         doc: "doc" in event ? event.doc : "",
+                //         config: "config" in event ? event.config : [],
+                //         params: "params" in event ? event.params : [],
+                //         preconditions: "preconditions" in event ? event.preconditions : [],
+                //         postconditions: "postconditions" in event ? event.postconditions : [],
+                //         sync: "sync" in event ? event.sync : []
+                //     });
+                // }
+                if (vm.previousState.indexOf(event.id) > -1) {
+                    g.setNode(event.id, {
+                        shape: "circle",
+                        class: "edgePrevious",
+                        label: event.label,
+                        doc: "doc" in event ? event.doc : "",
+                        config: "config" in event ? event.config : [],
+                        params: "params" in event ? event.params : [],
+                        preconditions: "preconditions" in event ? event.preconditions : [],
+                        postconditions: "postconditions" in event ? event.postconditions : [],
+                        sync: "sync" in event ? event.sync : []
+                    })
+                }
                 g.setParent(event.id, groupId);
+            };
+
+            // add events
+            specification.events.forEach(function (event) {
+                drawEvent(event);
             });
+
 
             function getLabelOfExternalMachine(external) {
                 var label = external.url !== "?" ? "<a href='#" + external.url + "'>" + external.label + "</a>" : external.label;
@@ -370,7 +390,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         .attr("label", "")
                         .attr("class", "initial");
                 node.intersect = function (point) {
-                    return dagreD3.intersect.circle(node, 100, point);
+                    return dagreD3.intersect.circle(node, 10, point);
                 };
 
                 return shapeSvg;
@@ -406,7 +426,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             var styleTooltip = function (edgeNode) {
                 function createPart(title, items) {
                     // this function is called upon rendering for all relevant items (not upon mouseover)
-                    // console.log("dbg: styleTooltip");
+                    // $log.debug("dbg: styleTooltip");
                     var result = "<h1>" + title + "</h1>";
                     for (var i = 0; i < items.length; i++) {
                         result += items[i];
@@ -452,34 +472,18 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 .each(function (v) {
                     // dbg: this function is called upon generation of the graph, once for each tooltip
                     $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
-                    // $(this).tooltip({content: v});
-                    // $(this).tooltip({
-                    //     content: function () {
-                    //         return v;
-                    //     }
-                    // });
                 });
-            /*
-             // THIS DOES NOT WORK
-             inner.selectAll("g.node.edgeNode")
-             .on("mouseover", function (){
-             console.log("mouseover");
-             tooltip.style("opacity", "1");
-             });*/
 
-            // select only edgenodes (i.e. transition label) that has FROM currentState
+            // select only available events
             inner.selectAll("g.node.edgeNode")
                 .filter(function (id) {
-                    if (state_regex.exec(currentState)[1] === event_regex.exec(id)[1]) {
-                        console.debug("currentState: ", currentState, "id: ", id);
-                    }
                     return state_regex.exec(currentState)[1] === event_regex.exec(id)[1];
                 })
+                // TODO: ng 'start action' should trigger this event also
                 .on("click", function (id) {
-                    console.debug("Node name: ", g.node(id).params);
                     if (g.node(id).params.length > 0) {
-                        console.info("Parameters needed");
-                        console.debug("Params: ", g.node(id).params);
+                        $log.info("Parameters needed");
+                        $log.debug("Params: ", g.node(id).params);
                         vm.params = g.node(id).params;
                         var $uibModalInstance = $uibModal.open({
                             animation: true,
@@ -494,11 +498,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         });
                         $uibModalInstance.result.then(function (results) {
                             if (results) {
-                                console.debug("Modal results: ", results);
+                                $log.debug("Modal results: ", results);
                                 updateState(id, results)
                             }
                             else {
-                                console.debug("No results");
+                                $log.debug("No results");
                             }
                         }, function (error) {
                             console.error("error: ", error);
@@ -527,11 +531,19 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 $http.get('http://localhost:8080/IngNLAccount/1/')
                 // $http.post('http://localhost:8080/OnUsCreditTransferNL/1/Create', body) //it's pretty impossible to derive the right body shape :/
                     .then(function (results) {
-                        console.debug('STUBSTUB: this just proves that the server is up. Does not actually have functionality.');
+                        $log.warn('STUBSTUB: this just proves that the server is up. Does not actually have functionality.');
                         // push old state and transition
                         vm.previousState.push(id);
                         vm.previousState.push(currentState);
                         currentState = nextState;
+                        // ok so here we already have to push the new available state, after flushing the array
+                        vm.availableEvent = [];
+                        specification.events.forEach(function (event) {
+                            if (state_regex.exec(nextState)[1] === event_regex.exec(event.id)[1]) {
+                                vm.availableEvent.push(event.id);
+                            }
+                        });
+
                         showSpec(currentState);
                     }, function (error) {
                         console.error("Error updating state", error);
@@ -539,10 +551,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             }
 
             // reset graph with click on init node
-            inner.selectAll("g.node.stateNode")
-                .filter(function (id) {
-                    return state_regex.exec(id)[1] === "init";
-                })
+            inner.selectAll("g.node.initNode")
                 .on("click", function (id) {
                     $log.debug("click init");
                     vm.reset();

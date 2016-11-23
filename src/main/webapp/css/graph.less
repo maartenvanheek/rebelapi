@@ -16,6 +16,7 @@
 @newNode: white;
 @currentNode: lightgreen;
 @previousNode: orange;
+@availableNode: chartreuse;
 
 //html,body {
 //    /*font: 300 14px 'Helvetica Neue', Helvetica;*/
@@ -86,10 +87,22 @@
     ry: 10;
 }
 
-.node.edgeNode rect {
+.node.edgeNode circle {
     fill: @edgeNode;
     stroke: none;
 }
+
+.node.edgeAvailable circle {
+  fill: @availableNode;
+  stroke: none;
+}
+
+.node.edgePrevious circle{
+  fill: @background;
+  stroke: @previousPath;
+  stroke-width: 3pt;
+}
+
 
 .node.stateNode circle {
   fill: @newNode;
