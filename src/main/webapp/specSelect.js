@@ -176,21 +176,94 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
                 g.setParent(fieldsId, groupId);
             }
-
+/*
             // Add states
             specification.states.forEach(function (state) {
+                $log.debug("State: ", state);
                 g.setNode(state.id, {
-                    shape: state.initial ? "initial" : state.final ? "final" : "statecircle",
+                    // shape: state.initial ? "initial" : state.final ? "final" : "rect",
+                    shape: state.initial ? "initial" : state.final ? "final" : "circle",
                     label: state.label,
                     style: state.id === currentState ? state.final ? "fill: #f00" : "fill: #afa" : state.initial || state.final ? "fill: #000" : "fill: #fff",
                     class: "stateNode"
                 });
                 if (vm.previousState.indexOf(state.id) > -1) {
                     g.setNode(state.id, {
-                        style: "fill: #f0f"
+                        // shape: "circle",
+                        // style: "fill: #f0f",
+                        class: "previousNode"
+                    })
+                }
+                else if (state.id === currentState) {
+                    if (state.initial) {
+                        // do initial formatting
+                        g.setNode(state.id, {
+                            shape: "initial",
+                            label: "",
+                            style: "fill: #afa"
+                        })
+                    }
+                    else {
+                        // do current state formatting
+                    }
+                }
+                g.setParent(state.id, groupId);
+            });*/
+
+            specification.states.forEach(function (state) {
+                if (state.initial) {
+                    g.setNode(state.id, {
+                        shape: "initial",
+                        label: ""
+                        //class: "initialNode"
+                    });
+                    if(state.id === currentState){
+                        g.setNode(state.id, {
+                            shape: "initial",
+                            label: "",
+                            class: "currentNode"
+                        });
+                    }
+                }
+                else if (state.final) {
+                    g.setNode(state.id, {
+                        shape: "final",
+                        label: "",
+                        style: "fill: black"
+                    });
+                    if (state.id === currentState) {
+                        g.setNode(state.id, {
+                            shape: "final",
+                            label: "",
+                            style: "fill: red"
+                        })
+                    }
+                }
+                else {
+                    g.setNode(state.id, {
+                        shape: "circle",
+                        label: state.label,
+                        class: "stateNode"
+                    })
+                }
+                // apply current node formatting
+                // option: do final node here, too, so it's logically together
+                if (state.id === currentState && !state.final && !state.initial) {
+                    g.setNode(state.id, {
+                        shape: "circle",
+                        class: "currentNode"
+                    })
+                }
+
+                // apply previous node formatting
+                else if (vm.previousState.indexOf(state.id) > -1) {
+                    g.setNode(state.id, {
+                        shape: "circle",
+                        class: "previousNode"
                     })
                 }
                 g.setParent(state.id, groupId);
+
             });
 
             // add events
@@ -240,16 +313,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             specification.transitions.forEach(function (trans) {
                 if (vm.previousState.indexOf(trans.via) > -1) {
                     g.setEdge(trans.from, trans.via, {
-                        label: "",
                         arrowhead: "undirected",
                         lineInterpolate: "basis",
                         class: "previous"
                     });
                     g.setEdge(trans.via, trans.to, {
-                        label: "",
                         lineInterpolate: "basis",
                         class: "previous",
-                        arrowheadClass: "arrowhead.previous"
+                        arrowheadStyle: "stroke: none; fill: blue"
                     });
                 }
                 else {
@@ -299,40 +370,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         .attr("label", "")
                         .attr("class", "initial");
                 node.intersect = function (point) {
-                    return dagreD3.intersect.circle(node, 10, point);
-                };
-
-                return shapeSvg;
-            };
-
-            render.shapes().statecircle = function (parent, bbox, node) {
-                console.log("parent: ",parent);
-                console.log("bbox: ", bbox);
-                console.log("node: ", node);
-                var w = bbox.width,
-                    h = bbox.height,
-                    shapeSvg = parent.insert("circle")
-                        .attr("cx", 0)
-                        .attr("cy", 0)
-                        .attr("r", 50)
-                        .attr("title", "STATE")
-                        .attr("class", "state")
-                        .attr("text", "al;ksfdjg;slkajg")
-                        .attr("text-anchor", "middle")
-                        .attr("transparency", 0.5)
-                        .attr("stroke", "#fff");
-                var text = shapeSvg.selectAll("text");
-                var textLabels = text
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .text(node.label)
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "20px")
-                    .attr("fill", "red");
-
-                node.intersect = function (point) {
-                    // dbg: this determines the origin and destination of transition edges
-                    return dagreD3.intersect.circle(node, 5, point);
+                    return dagreD3.intersect.circle(node, 100, point);
                 };
 
                 return shapeSvg;
@@ -506,8 +544,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     return state_regex.exec(id)[1] === "init";
                 })
                 .on("click", function (id) {
+                    $log.debug("click init");
                     vm.reset();
-
                 });
 
             var initialPlacement = function (svgViewport) {

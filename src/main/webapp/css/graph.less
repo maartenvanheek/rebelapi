@@ -9,7 +9,13 @@
 @fieldsText: black;
 @uncertain: magenta;
 @uncertain2: yellow;
+
+//new additions
 @previousPath: blue;
+
+@newNode: white;
+@currentNode: lightgreen;
+@previousNode: orange;
 
 //html,body {
 //    /*font: 300 14px 'Helvetica Neue', Helvetica;*/
@@ -83,6 +89,19 @@
 .node.edgeNode rect {
     fill: @edgeNode;
     stroke: none;
+}
+
+.node.stateNode circle {
+  fill: @newNode;
+  stroke: @black;
+}
+
+.node.currentNode circle {
+  fill: @currentNode;
+  stroke: @black;
+}
+.node.previousNode circle {
+  fill: @previousNode;
 }
 
 //.node.initial circle {
@@ -182,15 +201,13 @@
 }
 
 
+.arrowhead {
+  stroke: @previousPath;
+  fill: @previousPath;
+}
 
 .edgePath.previous path {
     stroke: @previousPath;
     fill: none;
     stroke-width: 3px;
-}
-
-.arrowhead.previous {
-    stroke: @previousPath;
-    //fill: @previousPath;
-    //stroke-width: 3px;
 }
