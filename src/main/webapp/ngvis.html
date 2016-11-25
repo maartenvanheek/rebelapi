@@ -3,13 +3,15 @@
 <head>
     <meta charset="utf-8">
     <title><b>Rebel</b> Specification Viewer</title>
+
+
     <script src="lib/external/jquery-1.12.0.min.js"></script>
     <!--<script src="https://code.jquery.com/jquery-3.1.1.js"></script>-->
 
     <!--Original scripts-->
     <script src="lib/external/d3.v3.min.js" charset="utf-8"></script>
     <script src="lib/external/dagre-d3.js"></script>
-    <script src="lib/external/micromarkdown.js"></script>
+    <!--<script src="lib/external/micromarkdown.js"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tipsy/1.0.3/jquery.tipsy.js"></script>
     <script src="lib/external/tipsy.js"></script>
 
@@ -28,66 +30,70 @@
     <script src="specSelect.js"></script>
 
     <!--CSS-->
-    <!--<link rel="stylesheet" href="lib/layout.css">-->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <!--<link rel="stylesheet" href="lib/external/reset.css">-->
     <link rel="stylesheet" href="lib/external/tipsy.css">
 
+
+
+
+    <!--Graph specific (colouring)-->
     <script src="css/colour.js"></script>
     <link rel="stylesheet/less" href="css/graph.less">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.7.1/less.min.js"></script>
-
-
-    <!--<script src="specRender.js"></script>-->
-    <!--<script src="lib/external/d3tip.js"></script>-->
-    <!--<script src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>-->
+    <link rel="stylesheet/css" href="css/the-guide-styles-responsive.css">
 </head>
 
-<body ng-app="visualApp" ng-controller="specCtrl as vm" grph>
-<div class="col-md-10">
-    <h1>Interactive Specification Visualiser</h1>
-    <!--<p>Params: {{vm.params}}</p>-->
-    <form name="selectionForm" class="form-vertical">
-        <div class="form-group">
-            <label for="specSelect">Select specification:</label>
-            <select name="specSelect" id="specSelect"
-                    ng-options="spec.name for spec in vm.specs"
-                    ng-model="vm.selectedSpec"
-                    ng-change="vm.showSpec()"></select>
-            <button ng-click="vm.showSpec()">Show</button>
-            <button ng-click="vm.startSpec()">Start action</button>
+<body ng-app="visualApp" ng-controller="specCtrl as vm" grph class="tg">
+<tg-full-cover color="b" aria-labelledby="form-title" arrow="true">
+    <div class="col-md-10">
+        <h2 class="brandbar-title">Interactive Specification Visualiser</h2>
+        <!--<p>Params: {{vm.params}}</p>-->
+        <form name="selectionForm" class="form-vertical">
+            <div class="form-group">
+                <label for="specSelect">Select specification:</label>
+                <select name="specSelect" id="specSelect"
+                        ng-options="spec.name for spec in vm.specs"
+                        ng-model="vm.selectedSpec"
+                        ng-change="vm.showSpec()"></select>
+                <button ng-click="vm.showSpec()">Show</button>
+                <button ng-click="vm.startSpec()">Start action</button>
+            </div>
+        </form>
+    </div>
+</tg-full-cover>
+
+<tg-full-cover color="b" aria-labelledby="devmode-title" arrow="true">
+    <div class="col-md-2" id="devdiv">
+        <div class="pull-right">
+            <label for="devmode"><span>Dev </span>
+                <input id="devmode" class="pull-right" type="checkbox" ng-model="vm.devmode" ng-change="vm.toggleDev()">
+            </label>
         </div>
-    </form>
-</div>
+        <div ng-show="vm.devmode">
+            <p>Graph w, h: {{vm.w|number:1}}, {{vm.h|number:1}}</p>
+            <button ng-click="vm.apitest()">Test API (GET)</button>
+        </div>
+        <div ng-show="vm.devmode">
+            <p>Previous state:</p>
+            <p ng-repeat="state in vm.previousState">{{state}}</p>
+            <hr>
+            <p>Available events:</p>
+            <p ng-repeat="event in vm.availableEvent">{{event}}</p>
+            <hr>
+        </div>
+    </div>
+</tg-full-cover>
 
-<div class="col-md-2" id="devdiv">
-    <div class="pull-right">
-        <label for="devmode"><span>Dev </span>
-            <input id="devmode" class="pull-right" type="checkbox" ng-model="vm.devmode" ng-change="vm.toggleDev()">
-        </label>
+<tg-full-cover color="b" aria-labelledby="visual-title">
+    <div class="col-md-12" id="visualisation">
+        <div id="svg" class="col-md-12">
+            <svg id="graph" xmlns="http://www.w3.org/2000/svg" width="{{vm.w}}"
+                 height="{{vm.h}}" viewBox="0 0 {{vm.w}} {{vm.h}}" preserveAspectRatio="true">
+                <g/> <!--vziw doet dit niets. SVG attribuut , geen idee: viewBox="0 0 10 200"-->
+            </svg>
+        </div>
     </div>
-    <div ng-show="vm.devmode">
-        <p>Graph w, h: {{vm.w|number:1}}, {{vm.h|number:1}}</p>
-        <button ng-click="vm.apitest()">Test API (GET)</button>
-    </div>
-    <div ng-show="vm.devmode">
-        <p>Previous state:</p>
-        <p ng-repeat="state in vm.previousState">{{state}}</p>
-        <hr>
-        <p>Available events:</p>
-        <p ng-repeat="event in vm.availableEvent">{{event}}</p>
-        <hr>
-    </div>
-</div>
-
-<div class="col-md-12" id="visualisation">
-    <div id="svg" class="col-md-12">
-        <svg id="graph" xmlns="http://www.w3.org/2000/svg" width="{{vm.w}}"
-             height="{{vm.h}}" viewBox="0 0 {{vm.w}} {{vm.h}}" preserveAspectRatio="true">
-            <g/> <!--vziw doet dit niets. SVG attribuut , geen idee: viewBox="0 0 10 200"-->
-        </svg>
-    </div>
-</div>
+</tg-full-cover>
 </body>
 </html>
 

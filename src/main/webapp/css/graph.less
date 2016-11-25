@@ -1,61 +1,71 @@
-@dash: gray;
+//http://theguide.europe.intranet/theguide.html#/visual-identity/
+// ING Colours
+@INGOrange: #FF6200;
+@Base: #a8a8a8;
+@Dark: #767676;
+@Light: #d5d5d5;
+@White: #ffffff;
+@INGIndigo: #525199;
+@INGSky: #60a6da;
+@INGLime: #D0D93c;
+@INGLeaf: #349651;
+@INGFuchsia: #ab0066;
+
+@dash: @Dark;
 @black: black;
-@text: black;
-@edgeNode: white;
-@background: white;
-@external: lightgray;
+@text: @Dark;
+@edgeNode: @INGOrange;
+@background: @White;
+@external: @Light;
 @graphTitle: black;
-@fieldsBox: lightgray;
+@fieldsBox: @Light;
 @fieldsText: black;
-@uncertain: magenta;
-@uncertain2: yellow;
+@uncertain: @INGFuchsia;
+@uncertain2: @INGFuchsia;
 
 //new additions
-@previousPath: blue;
+@previousPath: @INGSky;
+@newNode: @Light;
+@currentNode: @INGLime;
+@previousNode: @INGOrange;
+@availableNode: @INGLime;
 
-@newNode: white;
-@currentNode: lightgreen;
-@previousNode: orange;
-@availableNode: chartreuse;
+html, body {
+  font-family: "ING Me";
+}
 
-//html,body {
-//    /*font: 300 14px 'Helvetica Neue', Helvetica;*/
-//    font-family: 'lucida sans', 'trebuchet MS', 'Tahoma';
-//}
-
-.node{
-    font-size: large;
+.node {
+  font-size: large;
 }
 
 .cluster rect {
-    //main graph rectangle box (ex external components)
-    fill: @background;
-    stroke: @black;
+  //main graph rectangle box (ex external components)
+  fill: @background;
+  stroke: @black;
 }
 
-.cluster{
-    //??
-    color: @uncertain;
+.cluster {
+  //??
+  color: @uncertain;
 }
 
 .cluster .label div {
-    padding: 10px 0;
+  padding: 10px 0;
 }
 
 .label {
-    // ??
-    color: @uncertain;
-    margin: 10px 0;
-    text-align: center;
-    min-height: 100px;
+  // ??
+  color: @uncertain;
+  margin: 10px 0;
+  text-align: center;
+  min-height: 100px;
 }
 
 .label p {
-    // text of <referenced by> label
-    color: @text;
-    font-size: large;
+  // text of <referenced by> label
+  color: @text;
+  font-size: large;
 }
-
 
 //.node.fields.hide {
 // not used in ng visualisation?
@@ -63,140 +73,126 @@
 //}
 
 .node.fields rect {
-    fill: @fieldsBox;
+  fill: @fieldsBox;
 }
 
 .node.fields .label {
-    color: @fieldsText;
-    font-weight: normal;
-    text-align: left;
+  color: @fieldsText;
+  font-weight: normal;
+  text-align: left;
 }
 
-
-.node.fields table th {
-    font-weight: bold;
-    text-align: left;
-    padding-bottom: -5px;
+.node.fields .table th {
+  font-weight: bold;
+  text-align: left;
+  padding-bottom: -5px;
 }
 
 .node rect {
-    // this fills some external field rectangle AFAIK
-    stroke: @black;
-    fill: @uncertain2;
-    rx: 10;
-    ry: 10;
+  // this fills some external field rectangle AFAIK
+  stroke: @black;
+  fill: @uncertain2;
+  rx: 10;
+  ry: 10;
 }
 
-.node.edgeNode circle {
-    fill: @edgeNode;
-    stroke: none;
+// transition (edge) nodes
+.node.unavailableEdge circle {
+  fill: none;
+  stroke: @edgeNode;
+  stroke-width: 2px;
 }
 
-.node.edgeAvailable circle {
-  fill: @availableNode;
-  stroke: none;
+.node.availableEdge circle {
+  fill: none;
+  stroke: @availableNode;
+  stroke-width: 2px;
 }
 
-.node.edgePrevious circle{
+.node.previousEdge circle {
   fill: @background;
   stroke: @previousPath;
   stroke-width: 3pt;
 }
 
-
+// state nodes
 .node.stateNode circle {
   fill: @newNode;
-  stroke: @black;
+  stroke: none;
 }
 
 .node.currentNode circle {
   fill: @currentNode;
-  stroke: @black;
+  stroke: none;
 }
+
+.node.currentNode.label{
+  color: @Light;
+}
+
 .node.previousNode circle {
   fill: @previousNode;
+  color: @Light;
 }
 
-//.node.initial circle {
-// not used?
-//}
-//
-//.node.initial text {
-//    font-size: 0;
-//}
-
-// pretty sure that these are handled by js (if at all present)
-//.node.accepting circle {
-//    fill: @uncertain;
-//    margin: 2px;
-//    border: 1px solid #000;
-//    r: 8;
-//}
-//
-//.node.accepting text {
-//    font-size: 0;
-//}
-
 .node.externalMachine rect {
-    fill: @external;
+  fill: @external;
 }
 
 .node.externalMachine.in rect {
-    fill: @external;
+  fill: @external;
 }
 
 .node .label {
-    margin: 10px 0;
-    text-align: center;
+  margin: 10px 0;
+  text-align: center;
 }
 
-.node .label p {
-    font-size: 0.7em;
-}
 /*ok ...*/
 .label span.extendedBy {
-    // graph label (top center)
-    color: @text;
-    display: block;
-    font-size: medium;
+  // graph label (top center)
+  color: @text;
+  display: block;
+  font-size: medium;
 }
 
 .label span.inheritsFrom {
-    // graph title 'inherits from'
-    color: @text;
-    display: block;
-    font-size: medium;
+  // graph title 'inherits from'
+  color: @text;
+  display: block;
+  font-size: medium;
 }
 
-.label em{
-    // graph title (top center)
-    font-size: large;
-    color: @graphTitle;
+.label em {
+  // graph title (top center)
+  font-size: large;
+  color: @graphTitle;
 }
 
 .node.externalMachine .label p {
-    font-size: 0.7em;
+  font-size: 0.7em;
 }
 
 .edgePath path {
-    stroke: @black;
-    //fill: #000; // superfluous?
-    stroke-width: 1.5px;
+  stroke: @black;
+  //fill: #000; // superfluous?
+  stroke-width: 2px;
 }
 
 .edgePath.syncTo path {
-    stroke-dasharray: 5, 5;
-    stroke-width: 1.5px;
-    stroke: @dash;
-    //fill: @black //??
+  stroke-dasharray: 5, 5;
+  stroke-width: 2px;
+  stroke: @dash;
+  //fill: @black //??
 }
 
 .edgePath.syncFrom path {
-    stroke-dasharray: 20, 20;
-    stroke-width: 1.5px;
-    stroke: @dash;
-    //fill: @black
+  stroke-dasharray: 20, 20;
+  stroke-width: 1.5px;
+  stroke: @dash;
+  //fill: @black
 }
+
 //
 //.edgePath.hide path {
 //    display: none;
@@ -207,20 +203,29 @@
 //}
 
 .edgePath.specialisation path {
-    stroke-dasharray: 5, 5;
-    stroke-width: 1.5px;
-    stroke: @uncertain;
-    /*fill: #aaa*/
+  stroke-dasharray: 5, 5;
+  stroke-width: 1.5px;
+  stroke: @uncertain;
+  /*fill: #aaa*/
 }
 
+table.tiptable {
+  font-size: large;
+  font-family: inherit;
+}
+
+h1 {
+  color: @INGOrange;
+  font-size: xx-large;
+}
 
 .arrowhead {
-  stroke: @previousPath;
+  stroke: @INGFuchsia;
   fill: @previousPath;
 }
 
 .edgePath.previous path {
-    stroke: @previousPath;
-    fill: none;
-    stroke-width: 3px;
+  stroke: @previousPath;
+  fill: none;
+  stroke-width: 3px;
 }

@@ -77,9 +77,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         var g = (vm.selectedSpec !== undefined) ? SpecRenderer.render(vm.selectedSpec, currentState, svg) : SpecRenderer.render(noSpecFound, null, svg);
     }
 
-    function startSpec(){
-        // this should fire the initial spec thing
-        vm.showSpec();
+    function startSpec() {
+        // this should fire the initial spec
+
     }
 
     var SpecRenderer = function () {
@@ -107,6 +107,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         var currentState = function (currentState) {
             this.currentState = currentState;
         };
+
+        var glksfdgj = function(){};
 
         function buildGraph(specification, currentState) {
             function guid() {
@@ -255,36 +257,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // $log.debug("drawEvent id:_"+event.id+"_");
                 // $log.debug("available: ", vm.availableEvent);
                 // $log.debug("previous: ", vm.previousState);
-                g.setNode(event.id, {
-                    shape: "circle",
-                    class: "edgeNode",
-                    label: event.label,
-                    doc: "doc" in event ? event.doc : "",
-                    config: "config" in event ? event.config : [],
-                    params: "params" in event ? event.params : [],
-                    preconditions: "preconditions" in event ? event.preconditions : [],
-                    postconditions: "postconditions" in event ? event.postconditions : [],
-                    sync: "sync" in event ? event.sync : []
-                });
-                // if (vm.availableEvent.indexOf(event.id) > -1) {
-                //     $log.debug("available!");
-                //     g.setNode(event.id, {
-                //         shape: "circle",
-                //         // TODO: very nice that you made a specific class for this but it means that they are no longer clickable :/
-                //         class: "edgeAvailable",
-                //         label: event.label,
-                //         doc: "doc" in event ? event.doc : "",
-                //         config: "config" in event ? event.config : [],
-                //         params: "params" in event ? event.params : [],
-                //         preconditions: "preconditions" in event ? event.preconditions : [],
-                //         postconditions: "postconditions" in event ? event.postconditions : [],
-                //         sync: "sync" in event ? event.sync : []
-                //     });
-                // }
+
                 if (vm.previousState.indexOf(event.id) > -1) {
                     g.setNode(event.id, {
                         shape: "circle",
-                        class: "edgePrevious",
+                        class: "previousEdge",
                         label: event.label,
                         doc: "doc" in event ? event.doc : "",
                         config: "config" in event ? event.config : [],
@@ -293,6 +270,32 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         postconditions: "postconditions" in event ? event.postconditions : [],
                         sync: "sync" in event ? event.sync : []
                     })
+                }
+                else if (state_regex.exec(currentState)[1] === event_regex.exec(event.id)[1]) {
+                    g.setNode(event.id, {
+                        shape: "circle",
+                        class: "availableEdge",
+                        label: event.label,
+                        doc: "doc" in event ? event.doc : "",
+                        config: "config" in event ? event.config : [],
+                        params: "params" in event ? event.params : [],
+                        preconditions: "preconditions" in event ? event.preconditions : [],
+                        postconditions: "postconditions" in event ? event.postconditions : [],
+                        sync: "sync" in event ? event.sync : []
+                    });
+                }
+                else {
+                    g.setNode(event.id, {
+                        shape: "circle",
+                        class: "unavailableEdge",
+                        label: event.label,
+                        doc: "doc" in event ? event.doc : "",
+                        config: "config" in event ? event.config : [],
+                        params: "params" in event ? event.params : [],
+                        preconditions: "preconditions" in event ? event.preconditions : [],
+                        postconditions: "postconditions" in event ? event.postconditions : [],
+                        sync: "sync" in event ? event.sync : []
+                    });
                 }
                 g.setParent(event.id, groupId);
             };
@@ -313,7 +316,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         label = "<p>&lt;&lt;references&gt;&gt;</p>" + label;
                         break;
                     case "both":
-                        label = "<p>&lt;both references and is referenced by&gt;&gt;</p>" + label;
+                        label = "<p>&lt;&lt;both references and is referenced by&gt;&gt;</p>" + label;
                         break;
                 }
                 return label;
@@ -339,8 +342,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     });
                     g.setEdge(trans.via, trans.to, {
                         lineInterpolate: "basis",
-                        class: "previous",
-                        arrowheadStyle: "stroke: none; fill: blue"
+                        class: "previous"
+                        // arrowheadStyle: "stroke: none; fill: blue",
+                        // arrowheadClass: "arrowhead"
                     });
                 }
                 else {
@@ -425,39 +429,39 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             var styleTooltip = function (edgeNode) {
                 function createPart(title, items) {
-                    // this function is called upon rendering for all relevant items (not upon mouseover)
-                    // $log.debug("dbg: styleTooltip");
-                    var result = "<h1>" + title + "</h1>";
+                    var result = "<h2>" + title + "</h2><table class='tiptable'>";
                     for (var i = 0; i < items.length; i++) {
                         result += items[i];
                     }
+                    result += "</table>";
                     return result;
                 }
 
                 function preprocessStatements(origItems) {
                     var items = [];
                     origItems.forEach(function (o) {
-                        var item = ((o.doc !== undefined) ? "<p>" + micromarkdown.parse(o.doc) + "</p>" : "") +
-                            ((o.code !== undefined) ? micromarkdown.parse("```" + o.code + "```") : "");
+                        var item = ((o.doc !== undefined) ? "<tr><td><h4>" + o.doc + "</h4></td></tr>" : "") +
+                            ((o.code !== undefined) ? "<tr><td><code>" + o.code + "</code></td></tr>" : "");
                         items.push(item);
                     });
 
                     return items;
                 }
 
-                var content = edgeNode.doc !== "" ? edgeNode.doc + " \n" : "";
+                // this is basically the tooltip title
+                var content = edgeNode.doc !== "" ? "<h2>" + edgeNode.doc + "</h2>" : "";
 
                 if (edgeNode.params.length > 0) {
                     var items = [];
+                    items.push("<thead><th>Parameter</th><th>Type</th></thead>");
                     edgeNode.params.forEach(function (p) {
-                        items.push(micromarkdown.parse("```" + p.name + ": " + p.type + "```"));
+                        items.push("<tr><td>" + p.name + "</td><td>" + p.type + "</td></tr>");
                     });
                     content += createPart("Transition parameters", items);
                 }
                 content += edgeNode.preconditions.length > 0 ? createPart("Preconditions", preprocessStatements(edgeNode.preconditions)) : "";
                 content += edgeNode.postconditions.length > 0 ? createPart("Postconditions", preprocessStatements(edgeNode.postconditions)) : "";
                 content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
-                // console.log(content);
                 return content;
             };
 
@@ -465,21 +469,21 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             render(inner, g);
 
             // tooltips
-            inner.selectAll("g.node.edgeNode")
+            inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
                 .attr("title", function (v) {
                     return styleTooltip(g.node(v));
                 })
                 .each(function (v) {
-                    // dbg: this function is called upon generation of the graph, once for each tooltip
                     $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
                 });
 
             // select only available events
-            inner.selectAll("g.node.edgeNode")
-                .filter(function (id) {
-                    return state_regex.exec(currentState)[1] === event_regex.exec(id)[1];
-                })
-                // TODO: ng 'start action' should trigger this event also
+            inner.selectAll("g.node.availableEdge")
+            // filter is not needed if edge class is specifig
+            // .filter(function (id) {
+            //     return state_regex.exec(currentState)[1] === event_regex.exec(id)[1];
+            // })
+            // // TODO: ng 'start action' should trigger this event also
                 .on("click", function (id) {
                     if (g.node(id).params.length > 0) {
                         $log.info("Parameters needed");
@@ -522,6 +526,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             function updateState(id, body) {
+                $log.debug("I'm going to update state");
                 var transition = event_regex.exec(id)[2].toProperCase();
                 var nextState = "state_" + event_regex.exec(id)[3];
 
@@ -553,7 +558,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // reset graph with click on init node
             inner.selectAll("g.node.initNode")
                 .on("click", function (id) {
-                    $log.debug("click init");
+                    $log.debug("click init", id);
                     vm.reset();
                 });
 
