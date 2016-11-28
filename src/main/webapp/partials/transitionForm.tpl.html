@@ -5,15 +5,21 @@
     <form id="transForm" >
         <div class="form-group" ng-repeat="param in tvm.params"
              ng-class="{ 'has-error' : transFieldForm.{{param.name}}.$invalid }">
-            <ng-form name="transFieldForm">
+            <!--IF regular entry-->
+            <ng-form name="regularForm" ng-if="param.type != 'Money'">
                 <label>{{param.name}}</label>
                 <p>({{param.type}})</p>
-                <select class="form-control" name="currencySelect" id="currencySelect"
-                        ng-options="currency for currency in tvm.currencies"
-                        ng-model="selectedCurrency"
-                        ng-if="param.type == 'Money'"
-                        ng-change="updateMoney()"></select>
                 <input type="text" class="form-control" name="{{param.name}}" ng-model="param.value" size="5">
+            </ng-form>
+            <!--IF money entry-->
+            <ng-form name="moneyForm" ng-if="param.type == 'Money'">
+                <label>{{param.name}}</label>
+                <p>({{param.type}})</p>
+                <select class="form-control form-inline" name="currencySelect" id="currencySelect"
+                        ng-options="currency disable when currency=='USD' for currency in tvm.currencies"
+                        ng-model="money.currency"></select>
+                <input type="text" class="form-control form-inline" name="{{param.name}}" ng-model="money.value" size="5">
+                {{money}}
             </ng-form>
         </div>
     </form>

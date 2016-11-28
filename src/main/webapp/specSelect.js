@@ -489,7 +489,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         vm.params = g.node(id).params;
                         var $uibModalInstance = $uibModal.open({
                             animation: true,
-                            templateUrl: 'transitionForm.tpl.html',
+                            templateUrl: 'partials/transitionForm.tpl.html',
                             controller: 'transitionCtrl',
                             controllerAs: 'tvm',
                             resolve: {
@@ -599,7 +599,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     function transition() {
         var $uibModalInstance = $uibModal.open({
             animation: true,
-            templateUrl: 'transitionForm.tpl.html',
+            templateUrl: 'partials/transitionForm.tpl.html',
             controller: 'transitionCtrl',
             controllerAs: 'tvm',
             resolve: {
@@ -623,8 +623,25 @@ app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params
         var tvm = this;
         //TODO: Where to get currencies from?
         tvm.currencies = ["USD", "EUR"];
+        tvm.selectedCurrency = tvm.currencies[1];
         tvm.params = params;
-        tvm.close = function (result) {
-            $uibModalInstance.close(result);
+
+        $scope.money = {
+            currency: "EUR",
+            value: 0
+        };
+
+
+        $scope.$watchCollection('money', function updateMoney (money) {
+            $log.debug("update money");
+            var moneystr = money.currency + " " + money.value;
+            $log.debug(moneystr);
+        });
+
+
+        tvm.close = function (data) {
+            // replace money string
+            
+            $uibModalInstance.close(data);
         }
     }]);
