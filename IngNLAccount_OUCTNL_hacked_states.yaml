@@ -1,0 +1,636 @@
+swagger: '2.0'
+info:
+  title: ING Specification Based REST API
+  description: Control the FSM by REST
+  version: "1.0.0"
+host: localhost:8080
+schemes:
+  - http
+# will be prefixed to all paths
+basePath: /
+produces:
+  - application/json
+consumes:
+  - application/json 
+paths:
+    /IngNLAccount/{id}:
+      get:
+        summary: Retrieve specification data
+        description: Retrieves the current specification instance its fields and state
+        parameters:
+          - name: id
+            description: id of the state machine 
+            in: path
+            required: true
+            type: string
+        tags:
+          - IngNLAccount
+        produces:
+          - text/plain; charset=utf-8
+        consumes:
+          - text/plain; charset=utf-8
+          - application/json
+        responses:
+          "200":
+            description: Data structure representing the *fields* and current FSM *state*
+            schema:
+              $ref: '#/definitions/IngNLAccount_info'
+    
+    /IngNLAccount/{id}/Withdraw:
+       post:
+         description: Apply *withdraw* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Withdraw_body'
+         tags:
+           - IngNLAccount
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: opened
+            tostate: opened
+            available: null
+            final: false
+                 
+    
+    /IngNLAccount/{id}/Close:
+       post:
+         description: Apply *close* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Close_body'
+         tags:
+           - IngNLAccount
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: opened
+            tostate: closed
+            available: null
+            final: true
+    
+    /IngNLAccount/{id}/Deposit:
+       post:
+         description: Apply *deposit* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Deposit_body'
+         tags:
+           - IngNLAccount
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: opened
+            tostate: opened
+            available: null
+            final: false
+    
+    /IngNLAccount/{id}/Open:
+       post:
+         description: Apply *open* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Open_body'
+         tags:
+           - IngNLAccount
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: true
+            fromstate: new
+            tostate: opened
+            available: 
+              withdraw
+              deposit
+            final: false
+    
+    /OnUsCreditTransferNL/{id}:
+      get:
+        summary: Retrieve specification data
+        description: Retrieves the current specification instance its fields and state
+        parameters:
+          - name: id
+            description: id of the state machine 
+            in: path
+            required: true
+            type: string
+        tags:
+          - OnUsCreditTransferNL
+        produces:
+          - text/plain; charset=utf-8
+        consumes:
+          - text/plain; charset=utf-8
+          - application/json
+        responses:
+          "200":
+            description: Data structure representing the *fields* and current FSM *state*
+            schema:
+              $ref: '#/definitions/OnUsCreditTransferNL_info'
+              
+    
+    /OnUsCreditTransferNL/{id}/Create:
+       post:
+         description: Apply *create* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Create_body'
+         tags:
+           - OnUsCreditTransferNL
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: true
+            fromstate: uninitialised
+            tostate: accepted
+            available: authorize
+            final: false
+    
+    /OnUsCreditTransferNL/{id}/Book:
+       post:
+         description: Apply *book* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Book_body'
+         tags:
+           - OnUsCreditTransferNL
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: authorized
+            tostate: booked
+            available: null
+            final: true
+    
+    /OnUsCreditTransferNL/{id}/RejectClosedAccount:
+       post:
+         description: Apply *rejectClosedAccount* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/RejectClosedAccount_body'
+         tags:
+           - OnUsCreditTransferNL
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: authorized
+            tostate: rejectedClosedAccount
+            available: null
+            final: true
+    
+    /OnUsCreditTransferNL/{id}/RejectExecutionDateInThePast:
+       post:
+         description: Apply *rejectExecutionDateInThePast* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/RejectExecutionDateInThePast_body'
+         tags:
+           - OnUsCreditTransferNL
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: authorized
+            tostate: rejectedExecutionDateInThePast
+            available: null
+            final: true
+
+    
+    /OnUsCreditTransferNL/{id}/Authorize:
+       post:
+         description: Apply *authorize* transition
+         parameters:
+            - name: id
+              description: id of the state machine 
+              in: path
+              required: true
+              type: string
+            - name: body
+              in: body
+              description: transition data object that encapsulates the parameters that are necessary for the transition to take place
+              required: true
+              schema:
+                $ref: '#/definitions/Authorize_body'
+         tags:
+           - OnUsCreditTransferNL
+         responses:
+           "200":
+             description: Transition has been successful
+           "403":
+             description: Bad request
+             schema:
+               description: Variable names of the preconditions that failed
+               type: array
+               items:
+                 type: string
+         x-states:
+            initial: false
+            fromstate: accepted
+            tostate: authorized
+            available:
+              book
+              rejectClosedAccount
+              rejectExecutionDateInThePast
+            final: false
+
+definitions:
+    IngNLAccount_info:
+      type: object
+      description: Data structure representing the fields and current FSM state
+      properties:
+          # state is not an explicit property of the specification, but inferred for API purposes
+          state:
+            type: string
+          accountNumber:
+             type: string
+             description: Unique identifier for the instance of the specification
+          balance:
+             type: string
+             
+  
+    Withdraw_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the withdraw transition
+       required:
+         - Withdraw
+       properties:
+           Withdraw:
+               type: object
+               properties:
+                   amount:
+                     type: string
+    Close_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the close transition
+       required:
+         - Close
+       properties:
+           Close:
+               type: object
+               
+    Deposit_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the deposit transition
+       required:
+         - Deposit
+       properties:
+           Deposit:
+               type: object
+               properties:
+                   amount:
+                     type: string
+    Open_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the open transition
+       required:
+         - Open
+       properties:
+           Open:
+               type: object
+               properties:
+                   initialDeposit:
+                     type: string
+    
+    OnUsCreditTransferNL_info:
+      type: object
+      description: Data structure representing the fields and current FSM state
+      properties:
+          # state is not an explicit property of the specification, but inferred for API purposes
+          state:
+            type: string
+          amount:
+             type: string
+             
+          createdOn:
+             type: integer
+             
+          requestedExecutionDate:
+             type: integer
+             
+          actualExecutionDate:
+             type: integer
+             
+          debtor:
+             type: string
+             
+          creditor:
+             type: string
+             
+          bic:
+             type: string
+             
+          cstmrCdtTrfInitn_GrpHdr_MsgId:
+             type: string
+             description: Unique identifier for the instance of the specification
+          cstmrCdtTrfInitn_GrpHdr_CreDtTm:
+             type: integer
+             
+          cstmrCdtTrfInitn_GrpHdr_NbOfTxs:
+             type: integer
+             
+          cstmrCdtTrfInitn_GrpHdr_CtrlSum:
+             type: integer
+             
+          cstmrCdtTrfInitn_GrpHdr_InitgPty_Nm:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_PmtInfId:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_PmtMtd:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_BtchBookg:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_PmtTpInf_InstrPrty:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_PmtTpInf_SvcLvl_Cd:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_PmtTpInf_CtgyPurp_Cd:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_Dbtr_Nm:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_Dbtr_PstlAdr_Ctry:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_Dbtr_PstlAdr_AdrLine:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_PmtId_InstrId:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_PmtId_EndToEndId:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Amt:
+             type: integer
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_ChrgBr:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_CdtrAgt_FinInstnId_BIC:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Cdtr_Nm:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Cdtr_PstlAdr_Ctry:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Cdtr_PstlAdr_AdrLine:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Purp_Cd:
+             type: string
+             
+          cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_RmtInf_Ustrd:
+             type: string
+             
+  
+    Create_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the create transition
+       required:
+         - Create
+       properties:
+           Create:
+               type: object
+               properties:
+                   requestedExecutionDate:
+                     type: integer
+                   debtor:
+                     type: string
+                   creditor:
+                     type: string
+                   amount:
+                     type: string
+                   bic:
+                     type: string
+                   cstmrCdtTrfInitn_GrpHdr_MsgId:
+                     type: string
+                   cstmrCdtTrfInitn_GrpHdr_CreDtTm:
+                     type: integer
+                   cstmrCdtTrfInitn_GrpHdr_NbOfTxs:
+                     type: integer
+                   cstmrCdtTrfInitn_GrpHdr_CtrlSum:
+                     type: integer
+                   cstmrCdtTrfInitn_GrpHdr_InitgPty_Nm:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_PmtInfId:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_PmtMtd:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_BtchBookg:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_PmtTpInf_InstrPrty:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_PmtTpInf_SvcLvl_Cd:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_PmtTpInf_CtgyPurp_Cd:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_Dbtr_Nm:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_Dbtr_PstlAdr_Ctry:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_Dbtr_PstlAdr_AdrLine:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_PmtId_InstrId:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_PmtId_EndToEndId:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Amt:
+                     type: integer
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_ChrgBr:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Cdtr_Nm:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Cdtr_PstlAdr_Ctry:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Cdtr_PstlAdr_AdrLine:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_Purp_Cd:
+                     type: string
+                   cstmrCdtTrfInitn_PmtInf_CdtTrfTxInf_RmtInf_Ustrd:
+                     type: string
+    Book_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the book transition
+       required:
+         - Book
+       properties:
+           Book:
+               type: object
+               
+    RejectClosedAccount_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the rejectClosedAccount transition
+       required:
+         - RejectClosedAccount
+       properties:
+           RejectClosedAccount:
+               type: object
+               
+    RejectExecutionDateInThePast_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the rejectExecutionDateInThePast transition
+       required:
+         - RejectExecutionDateInThePast
+       properties:
+           RejectExecutionDateInThePast:
+               type: object
+               
+    Authorize_body:
+       type: object
+       description: Data object encapsulating the transition parameters for the authorize transition
+       required:
+         - Authorize
+       properties:
+           Authorize:
+               type: object
+               
+    

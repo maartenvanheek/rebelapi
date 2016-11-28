@@ -636,12 +636,13 @@ app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params
             $log.debug("update money");
             var moneystr = money.currency + " " + money.value;
             $log.debug(moneystr);
+            tvm.params.amount = moneystr;
         });
 
 
         tvm.close = function (data) {
             // replace money string
-            
+
             $uibModalInstance.close(data);
         }
     }]);

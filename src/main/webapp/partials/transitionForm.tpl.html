@@ -12,6 +12,9 @@
                 <input type="text" class="form-control" name="{{param.name}}" ng-model="param.value" size="5">
             </ng-form>
             <!--IF money entry-->
+
+            <ng-include src="regularForm.tpl.html" ng-if="param.type == 'Money'"></ng-include>
+
             <ng-form name="moneyForm" ng-if="param.type == 'Money'">
                 <label>{{param.name}}</label>
                 <p>({{param.type}})</p>
