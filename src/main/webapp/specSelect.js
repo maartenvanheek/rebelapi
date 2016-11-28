@@ -6,8 +6,8 @@ var app = angular.module('visualApp.selection', []);
 
 app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($log, $uibModal, $http, $window) {
     var vm = this;
+    vm.processSpecs = processSpecs;
 
-    vm.specs = specs;
     vm.showSpec = showSpec;
     vm.startSpec = startSpec;
     vm.transition = transition;
@@ -15,6 +15,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     vm.apitest = apitest;
     vm.reset = reset;
+
+
+    // vm.specs = specs;
+    $http.get('states_hacked.json').then(function(results){
+        vm.specs = results.data;
+        $log.debug(vm.specs);
+        vm.processSpecs();
+    });
 
     // maybe need a prefix for the api?
     vm.server = 'http://localhost:8080/';
@@ -82,6 +90,22 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     }
 
+    function processSpecs(){
+        // api calls are stored as keys (objecst) in specs.paths
+        var apicalls = Object.keys(vm.specs.paths);
+        // extract unique paths - these are the visualisations to be rendered
+        var rgx = /\/(\w+)\//
+    }
+
+
+
+
+
+
+
+
+
+    // HERE starts them evil spec renderer
     var SpecRenderer = function () {
         var state_regex = /state_([a-zA-Z]+)/;
         var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
