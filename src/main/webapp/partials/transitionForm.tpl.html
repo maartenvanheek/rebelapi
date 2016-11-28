@@ -2,12 +2,17 @@
     <h2>Enter transition parameters:</h2>
 </div>
 <div class="modal-body">
-    <form id="transForm" novalidate>
+    <form id="transForm" >
         <div class="form-group" ng-repeat="param in tvm.params"
              ng-class="{ 'has-error' : transFieldForm.{{param.name}}.$invalid }">
             <ng-form name="transFieldForm">
                 <label>{{param.name}}</label>
                 <p>({{param.type}})</p>
+                <select class="form-control" name="currencySelect" id="currencySelect"
+                        ng-options="currency for currency in tvm.currencies"
+                        ng-model="selectedCurrency"
+                        ng-if="param.type == 'Money'"
+                        ng-change="updateMoney()"></select>
                 <input type="text" class="form-control" name="{{param.name}}" ng-model="param.value" size="5">
             </ng-form>
         </div>

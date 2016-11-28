@@ -108,8 +108,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             this.currentState = currentState;
         };
 
-        var glksfdgj = function(){};
-
         function buildGraph(specification, currentState) {
             function guid() {
                 function s4() {
@@ -491,7 +489,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         vm.params = g.node(id).params;
                         var $uibModalInstance = $uibModal.open({
                             animation: true,
-                            templateUrl: 'transModal.tpl.html',
+                            templateUrl: 'transitionForm.tpl.html',
                             controller: 'transitionCtrl',
                             controllerAs: 'tvm',
                             resolve: {
@@ -551,7 +549,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
                         showSpec(currentState);
                     }, function (error) {
-                        console.error("Error updating state", error);
+                        $log.error("Error updating state", error);
                     });
             }
 
@@ -601,7 +599,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     function transition() {
         var $uibModalInstance = $uibModal.open({
             animation: true,
-            templateUrl: 'transModal.tpl.html',
+            templateUrl: 'transitionForm.tpl.html',
             controller: 'transitionCtrl',
             controllerAs: 'tvm',
             resolve: {
@@ -619,10 +617,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
 }]);
 
-app.controller('transitionCtrl', ['$scope', '$uibModalInstance', 'params',
-    function ($scope, $uibModalInstance, params) {
-        console.log("modal params: ", params);
+app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params',
+    function ($scope, $uibModalInstance, $log, params) {
+        $log.debug("modal params: ", params);
         var tvm = this;
+        //TODO: Where to get currencies from?
+        tvm.currencies = ["USD", "EUR"];
         tvm.params = params;
         tvm.close = function (result) {
             $uibModalInstance.close(result);
