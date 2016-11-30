@@ -30,5 +30,4 @@ app.config(function ($logProvider) {
 
 app.run(['$log', function($log){
     $log.debug("in app.run");
-    $log.debug(specs);
 }]);

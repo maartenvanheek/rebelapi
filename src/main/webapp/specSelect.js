@@ -7,6 +7,7 @@ var app = angular.module('visualApp.selection', []);
 app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($log, $uibModal, $http, $window) {
     var vm = this;
     vm.processSpecs = processSpecs;
+    vm.selectSpec = selectSpec;
 
     vm.showSpec = showSpec;
     vm.startSpec = startSpec;
@@ -16,11 +17,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.apitest = apitest;
     vm.reset = reset;
 
+    vm.specNames = undefined;
 
     // vm.specs = specs;
-    $http.get('states_hacked.json').then(function(results){
+    $http.get('states_hacked.json').then(function (results) {
         vm.specs = results.data;
-        $log.debug(vm.specs);
+        $log.debug("specs: ", vm.specs);
         vm.processSpecs();
     });
 
@@ -32,7 +34,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.devmode = true;
 
     //default spec (so you don't have to pick one always)
-    vm.selectedSpec = specs[0];
+    // vm.selectedSpec = specs[0];
 
     vm.transitionId = undefined;
 
@@ -64,6 +66,65 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             });
     }
 
+    function processSpecs() {
+        // api calls are stored as keys (objects) in specs.paths
+        // obtain array with api paths
+        var keys = Object.keys(vm.specs.paths);
+        // OPTION 1: regex. This regex matches a whole word between slashes, with negative lookahead, global
+        // it returns unique matches. CAUTION: if path/contains/more/slahses, it will also return those matches...
+        // http://stackoverflow.com/questions/14061349/regular-expression-match-all-words-but-match-unique-words-only-once
+        var rgx = /[,"\n]\/(\w+)\/(?!.*\1\b)/g;
+        // this creates an array of matches. Unfortunately, these contain the delimiters as well...
+        var matches = keys.toString().match(rgx);
+
+        //replace not so useful characters
+        for (var i = 0; i < matches.length; i++) {
+            matches[i] = matches[i].replace(/[,\/]/g, "");
+        }
+
+        vm.specNames = matches;
+        $log.debug("specnames: ", vm.specNames);
+        $log.debug("Keys: ", keys);
+
+        var tree = new Map();
+        var states = new Map();
+        var map = [];
+
+        var spec_re = /\/(\w+)\//;
+        var trans_re = /.*}\/(\w+)/;
+        // alternative to the below: have the regex matcher find next (or something)
+        // build tree
+        keys.forEach(function (key) {
+            // $log.debug("key:  ", key);
+            if (key[key.length - 1] !== "}") {
+                var spec = spec_re.exec(key)[1];
+                var trans = trans_re.exec(key)[1];
+
+                var obj = {};
+                obj[trans] = vm.specs.paths[key]["x-states"];
+                map.push(obj);
+                // $log.debug("spec: ", spec);
+                // $log.debug("trans:", trans);
+                // get states??
+                // tree.set(spec, trans);
+                // $log.debug(tree);
+                // states.set(tree.get(trans), vm.specs.paths[key]["x-states"]);
+            }
+        });
+
+        $log.debug("Map: ", map);
+
+        //example string
+        // var str = '/IngNLAccount/{id}/Deposit,/IngNLAccount/{id}/Open,/OnUsCreditTransferNL/{id},/OnUsCreditTransferNL/{id}/Create/test/longer/call';
+        // OPTION 2: look in the 'tag' and then filter that for unique entries - seems more work
+    }
+
+    function selectSpec() {
+        // after selection of a specification, we have to parse the specs to find the right states
+        $log.debug("Selected: ", vm.selectedSpec);
+    }
+
+
     function reset() {
         vm.previousState = [];
         vm.availableEvent = [];
@@ -89,20 +150,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         // this should fire the initial spec
 
     }
-
-    function processSpecs(){
-        // api calls are stored as keys (objecst) in specs.paths
-        var apicalls = Object.keys(vm.specs.paths);
-        // extract unique paths - these are the visualisations to be rendered
-        var rgx = /\/(\w+)\//
-    }
-
-
-
-
-
-
-
 
 
     // HERE starts them evil spec renderer
@@ -656,7 +703,7 @@ app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params
         };
 
 
-        $scope.$watchCollection('money', function updateMoney (money) {
+        $scope.$watchCollection('money', function updateMoney(money) {
             $log.debug("update money");
             var moneystr = money.currency + " " + money.value;
             $log.debug(moneystr);
