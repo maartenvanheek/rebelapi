@@ -101,7 +101,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 var trans = trans_re.exec(key)[1];
 
                 var obj = {};
-                obj[trans] = vm.specs.paths[key]["x-states"];
+                // obj[trans] = vm.specs.paths[key]["x-states"];
+                obj[spec] = {[trans]: vm.specs.paths[key]["x-states"]};
                 map.push(obj);
                 // $log.debug("spec: ", spec);
                 // $log.debug("trans:", trans);
