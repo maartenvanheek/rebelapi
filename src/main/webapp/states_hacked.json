@@ -238,8 +238,8 @@
                 "initial": true,
                 "fromstate": "new",
                 "tostate": "opened",
-                "available": "withdraw deposit",
-                "final": true
+                "available": "withdraw deposit close",
+                "final": false
             }
         },
         "/OnUsCreditTransferNL/{id}": {

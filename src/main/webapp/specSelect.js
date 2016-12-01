@@ -23,7 +23,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         // vm.processSpecs();
         var keys = Object.keys(vm.specs.paths);
         vm.specNames = getSpecNames(keys);
-        vm.specMaps = getSpecMaps(keys);
+        vm.specMap = getSpecMap(keys);
     });
 
     // maybe need a prefix for the api?
@@ -34,7 +34,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.devmode = true;
 
     //default spec (so you don't have to pick one always)
-    // vm.selectedSpec = vm.specs[0];
+    vm.selectedSpec = undefined;
 
     vm.transitionId = undefined;
 
@@ -60,7 +60,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             });
     }
 
-    function getSpecNames(keys){
+    function getSpecNames(keys) {
         // Two options: extrac specname from key with regex, or look up the unique entries in the 'tags' field...
         // http://stackoverflow.com/questions/14061349/regular-expression-match-all-words-but-match-unique-words-only-once
         var rgx = /[,"\n]\/(\w+)\/(?!.*\1\b)/g;
@@ -76,7 +76,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         // var str = '/IngNLAccount/{id}/Deposit,/IngNLAccount/{id}/Open,/OnUsCreditTransferNL/{id},/OnUsCreditTransferNL/{id}/Create/test/longer/call';
     }
 
-    function getSpecMaps(keys) {
+    function getSpecMap(keys) {
         // api calls are stored as keys (objects) in specs.paths
         // obtain array with api paths
         var spec_re = /\/(\w+)\//;
@@ -114,7 +114,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
                 var stateObj = vm.specs.paths[key]["x-states"];
 
-                if (specmap.has(spec)){
+                if (specmap.has(spec)) {
                     specmap.set(spec, statemap.set(trans, stateObj));
                 }
                 else {
@@ -127,18 +127,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         return specmap;
     }
 
-    function getSpecMap(specName){
-        return specmap;
-    }
-
     function selectSpec() {
         // after selection of a specification, we have to parse the specs to find the right states
-        $log.debug("Selected: ", vm.selectedSpec);
-
-        var map = vm.specMaps.get(vm.selectedSpec);
+        // $log.debug("Selected: ", vm.selectedSpec);
+        var map = vm.specMap.get(vm.selectedSpec);
         $log.debug(map);
+        // now build the tree?
+        showSpec(map, undefined);
     }
-
 
     function reset() {
         vm.previousState = [];
@@ -153,46 +149,48 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         showSpec();
     }
 
-    function showSpec(currentState) {
+    function showSpec(map, currentState) {
         if (currentState === undefined) {
             currentState = "state_init";
         }
         var svg = d3.select("svg");
-        var g = (vm.selectedSpec !== undefined) ? SpecRenderer.render(vm.selectedSpec, currentState, svg) : SpecRenderer.render(noSpecFound, null, svg);
+        // specRenderer.buildGraph(vm.selectedSpec,currentState);
+        // specRenderer.renderSpecification(vm.selectedSpec, currentState, svg);
+        specRenderer(map, currentState, svg);
     }
 
     function startSpec() {
         // this should fire the initial spec
-
     }
 
-
     // HERE starts them evil spec renderer
-    var SpecRenderer = function () {
+    function specRenderer(map, currentState, svg) {
+        $log.debug("specrenderereererer");
+        renderSpecification(map, currentState, svg);
+
         var state_regex = /state_([a-zA-Z]+)/;
         var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
+        // var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
+        //                               fields, events, states, transitions, externalMachines,
+        //                               transitionsToExternalMachines, transitionsFromExternalMachines) {
+        //     this.fqn = fqn;
+        //     this.name = name;
+        //     this.documentation = documentation;
+        //     this.modifier = modifier;
+        //     this.inheritsFrom = inheritsFrom;
+        //     this.extendedBy = extendedBy;
+        //     this.fields = fields;
+        //     this.events = events;
+        //     this.states = states;
+        //     this.transitions = transitions;
+        //     this.externalMachines = externalMachines;
+        //     this.transitionsToExternalMachines = transitionsToExternalMachines;
+        //     this.transitionsFromExternalMachines = transitionsFromExternalMachines
+        // };
 
-        var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
-                                      fields, events, states, transitions, externalMachines,
-                                      transitionsToExternalMachines, transitionsFromExternalMachines) {
-            this.fqn = fqn;
-            this.name = name;
-            this.documentation = documentation;
-            this.modifier = modifier;
-            this.inheritsFrom = inheritsFrom;
-            this.extendedBy = extendedBy;
-            this.fields = fields;
-            this.events = events;
-            this.states = states;
-            this.transitions = transitions;
-            this.externalMachines = externalMachines;
-            this.transitionsToExternalMachines = transitionsToExternalMachines;
-            this.transitionsFromExternalMachines = transitionsFromExternalMachines
-        };
-
-        var currentState = function (currentState) {
-            this.currentState = currentState;
-        };
+        // var currentState = function (currentState) {
+        //     this.currentState = currentState;
+        // };
 
         function buildGraph(specification, currentState) {
             function guid() {
@@ -211,31 +209,36 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             // Create group for specification
             var groupId = guid();
-            var groupLabel = "<em>" + specification.name + "</em>";
-            if ("name" in specification.inheritsFrom) {
-                if (specification.inheritsFrom.url !== "?") {
-                    groupLabel += "<span class='inheritsFrom'>inherits from <a href='#" + specification.inheritsFrom.url + "'>" + specification.inheritsFrom.name + "</a></span>";
-                } else {
-                    groupLabel += "<span class='inheritsFrom'>inherits from " + specification.inheritsFrom.name + "</span>";
-                }
-            }
+            // var groupLabel = "<em>" + specification.name + "</em>";
+            var groupLabel = "<em>" + vm.selectedSpec + "</em>";
+            // if ("name" in specification.inheritsFrom) {
+            //     if (specification.inheritsFrom.url !== "?") {
+            //         groupLabel += "<span class='inheritsFrom'>inherits from <a href='#" + specification.inheritsFrom.url + "'>" + specification.inheritsFrom.name + "</a></span>";
+            //     } else {
+            //         groupLabel += "<span class='inheritsFrom'>inherits from " + specification.inheritsFrom.name + "</span>";
+            //     }
+            // }
 
-            if (specification.extendedBy.length > 0) {
-                groupLabel += "<span class='extendedBy'>extended by ";
-                specification.extendedBy.forEach(function (e, index) {
-                    if ("url" in e) {
-                        groupLabel += "<a href='#" + e.url + "'>" + e.name + "</a>";
-                    } else {
-                        groupLabel += e.name;
-                    }
 
-                    groupLabel += index < specification.extendedBy.length - 1 ? ", " : "";
-                });
-            }
+            // This is important for labelling and referencing - not for now.
+            /*
+             if (specification.extendedBy.length > 0) {
+             groupLabel += "<span class='extendedBy'>extended by ";
+             specification.extendedBy.forEach(function (e, index) {
+             if ("url" in e) {
+             groupLabel += "<a href='#" + e.url + "'>" + e.name + "</a>";
+             } else {
+             groupLabel += e.name;
+             }
 
-            groupLabel = (specification.modifier === "abstract" ? "<p>&lt;&lt;abstract&gt;&gt;</p>" :
-                    specification.modifier === "external" ? "<p>&lt;&lt;external&gt;&gt;</p>" :
-                        "") + groupLabel;
+             groupLabel += index < specification.extendedBy.length - 1 ? ", " : "";
+             });
+             }
+
+             groupLabel = (specification.modifier === "abstract" ? "<p>&lt;&lt;abstract&gt;&gt;</p>" :
+             specification.modifier === "external" ? "<p>&lt;&lt;external&gt;&gt;</p>" :
+             "") + groupLabel;
+             */
 
             g.setNode(groupId, {
                 labelType: "html",
@@ -245,150 +248,187 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 class: "groupLabel"
             });
 
-            // add the fields of the specification
-            if (specification.fields.length > 0) {
-                var fieldsId = guid();
-                var fieldsLabel = "<table><thead><tr><th>Fields</th></tr></thead><tbody>";
-                specification.fields.forEach(function (field) {
-                    fieldsLabel += "<tr><td>" + field.name + ":</td><td>" + field.type + "</td></tr>";
-                });
-                fieldsLabel += "</tbody></table>";
+            /*
+             // add the fields of the specification
+             if (specification.fields.length > 0) {
+             var fieldsId = guid();
+             var fieldsLabel = "<table><thead><tr><th>Fields</th></tr></thead><tbody>";
+             specification.fields.forEach(function (field) {
+             fieldsLabel += "<tr><td>" + field.name + ":</td><td>" + field.type + "</td></tr>";
+             });
+             fieldsLabel += "</tbody></table>";
 
-                g.setNode(fieldsId, {
-                    labelType: "html",
-                    label: fieldsLabel,
-                    shape: "rect",
-                    class: "fields"
-                });
-                g.setParent(fieldsId, groupId);
-            }
+             g.setNode(fieldsId, {
+             labelType: "html",
+             label: fieldsLabel,
+             shape: "rect",
+             class: "fields"
+             });
+             g.setParent(fieldsId, groupId);
+             }
+             */
 
 
             var drawInit = function (state) {
-                g.setNode(state.id, {
+                g.setNode(state, {
                     shape: "initial",
                     label: "",
                     class: "initNode"
                 });
-                // basically you don't want this
-                // if (state.id === currentState) {
-                //     g.setNode(state.id, {
-                //         shape: "initial",
-                //         label: "",
-                //         class: "initNode",
-                //         style: "fill: lightgreen"
-                //     });
-                // }
-                g.setParent(state.id, groupId);
+                g.setParent(state, groupId);
             };
 
             var drawFinal = function (state) {
-                g.setNode(state.id, {
+                g.setNode(state, {
                     shape: "final",
                     label: "",
                     style: "fill: black"
                 });
-                if (state.id === currentState) {
-                    g.setNode(state.id, {
+                if (state === currentState) {
+                    g.setNode(state, {
                         shape: "final",
                         label: "",
                         style: "fill: red"
                     })
                 }
-                g.setParent(state.id, groupId);
+                g.setParent(state, groupId);
             };
 
             var drawState = function (state) {
                 // ok so you can draw them as shape circle (and they get the radius from the label size)
                 // or you can do it as the initial/final state drawing... but then they won't have labels :/
-                g.setNode(state.id, {
+                g.setNode(state, {
                     shape: "circle",
                     // bbox: "width: 500, height: 500",
-                    label: state.label,
+                    label: state,
                     class: "stateNode"
                 });
-                if (state.id === currentState) {
-                    g.setNode(state.id, {
+                if (state === currentState) {
+                    g.setNode(state, {
                         shape: "circle",
                         class: "currentNode",
-                        label: state.label
+                        label: state
                     })
                 }
-                else if (vm.previousState.indexOf(state.id) > -1) {
-                    g.setNode(state.id, {
+                else if (vm.previousState.indexOf(state) > -1) {
+                    g.setNode(state, {
                         shape: "circle",
                         class: "previousNode",
-                        label: state.label
+                        label: state
                     })
                 }
-                g.setParent(state.id, groupId);
+                g.setParent(state, groupId);
             };
 
-            specification.states.forEach(function (state) {
-                if (state.initial) {
-                    drawInit(state)
-                }
-                else if (state.final) {
-                    drawFinal(state)
-                }
-                else {
-                    drawState(state);
-                }
-                // REVIEW: callback and assign g.setparent here instead?
-                // g.setParent(state.id, groupId);
-            });
             var drawEvent = function (event) {
                 // $log.debug("drawEvent id:_"+event.id+"_");
                 // $log.debug("available: ", vm.availableEvent);
                 // $log.debug("previous: ", vm.previousState);
 
-                if (vm.previousState.indexOf(event.id) > -1) {
-                    g.setNode(event.id, {
+                if (vm.previousState.indexOf(event) > -1) {
+                    g.setNode(event, {
                         shape: "circle",
                         class: "previousEdge",
-                        label: event.label,
-                        doc: "doc" in event ? event.doc : "",
-                        config: "config" in event ? event.config : [],
-                        params: "params" in event ? event.params : [],
-                        preconditions: "preconditions" in event ? event.preconditions : [],
-                        postconditions: "postconditions" in event ? event.postconditions : [],
-                        sync: "sync" in event ? event.sync : []
+                        label: event,
+                        // doc: "doc" in event ? event.doc : "",
+                        // config: "config" in event ? event.config : [],
+                        // params: "params" in event ? event.params : [],
+                        // preconditions: "preconditions" in event ? event.preconditions : [],
+                        // postconditions: "postconditions" in event ? event.postconditions : [],
+                        // sync: "sync" in event ? event.sync : []
                     })
                 }
-                else if (state_regex.exec(currentState)[1] === event_regex.exec(event.id)[1]) {
-                    g.setNode(event.id, {
+                else if (event.fromstate === currentState) {
+                    g.setNode(event, {
                         shape: "circle",
                         class: "availableEdge",
-                        label: event.label,
-                        doc: "doc" in event ? event.doc : "",
-                        config: "config" in event ? event.config : [],
-                        params: "params" in event ? event.params : [],
-                        preconditions: "preconditions" in event ? event.preconditions : [],
-                        postconditions: "postconditions" in event ? event.postconditions : [],
-                        sync: "sync" in event ? event.sync : []
+                        label: event,
+                        // doc: "doc" in event ? event.doc : "",
+                        // config: "config" in event ? event.config : [],
+                        // params: "params" in event ? event.params : [],
+                        // preconditions: "preconditions" in event ? event.preconditions : [],
+                        // postconditions: "postconditions" in event ? event.postconditions : [],
+                        // sync: "sync" in event ? event.sync : []
                     });
                 }
                 else {
-                    g.setNode(event.id, {
+                    g.setNode(event, {
                         shape: "circle",
                         class: "unavailableEdge",
-                        label: event.label,
-                        doc: "doc" in event ? event.doc : "",
-                        config: "config" in event ? event.config : [],
-                        params: "params" in event ? event.params : [],
-                        preconditions: "preconditions" in event ? event.preconditions : [],
-                        postconditions: "postconditions" in event ? event.postconditions : [],
-                        sync: "sync" in event ? event.sync : []
+                        label: event,
+                        // doc: "doc" in event ? event.doc : "",
+                        // config: "config" in event ? event.config : [],
+                        // params: "params" in event ? event.params : [],
+                        // preconditions: "preconditions" in event ? event.preconditions : [],
+                        // postconditions: "postconditions" in event ? event.postconditions : [],
+                        // sync: "sync" in event ? event.sync : []
                     });
                 }
                 g.setParent(event.id, groupId);
             };
 
-            // add events
-            specification.events.forEach(function (event) {
-                drawEvent(event);
+            // Set up internal edges
+            var drawEdge = function (trans) {
+                if (vm.previousState.indexOf(trans.via) > -1) {
+                    g.setEdge(trans.from, trans.via, {
+                        arrowhead: "undirected",
+                        lineInterpolate: "basis",
+                        class: "previous"
+                    });
+                    g.setEdge(trans.via, trans.to, {
+                        lineInterpolate: "basis",
+                        class: "previous"
+                        // arrowheadStyle: "stroke: none; fill: blue",
+                        // arrowheadClass: "arrowhead"
+                    });
+                }
+                else {
+                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: "basis"});
+                    g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis"});
+                }
+            };
+
+            map.forEach(function (value, transition) {
+                // maybe it's possible to drawEvent(transition) here
+                if (value.initial) {
+                    drawInit(value.fromstate);
+                    drawEvent(transition);
+                    drawState(value.tostate);
+                }
+                else if (value.final) {
+                    drawState(value.fromstate);
+                    drawEvent(transition);
+                    drawFinal(value.tostate);
+                }
+                else {
+                    drawState(value.fromstate);
+                    drawEvent(transition);
+                    drawState(value.tostate);
+                }
+                drawEdge({from: value.fromstate, via: transition, to: value.tostate})
             });
 
+            // specification.states.forEach(function (state) {
+            //     if (state.initial) {
+            //         drawInit(state)
+            //     }
+            //     else if (state.final) {
+            //         drawFinal(state)
+            //     }
+            //     else {
+            //         drawState(state);
+            //     }
+            //     // REVIEW: callback and assign g.setparent here instead?
+            //     // g.setParent(state.id, groupId);
+            // });
+
+
+            // add events
+            // specification.events.forEach(function (event) {
+            //     drawEvent(event);
+            // });
+
+/*
 
             function getLabelOfExternalMachine(external) {
                 var label = external.url !== "?" ? "<a href='#" + external.url + "'>" + external.label + "</a>" : external.label;
@@ -416,26 +456,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
             });
 
-            // Set up internal edges
-            specification.transitions.forEach(function (trans) {
-                if (vm.previousState.indexOf(trans.via) > -1) {
-                    g.setEdge(trans.from, trans.via, {
-                        arrowhead: "undirected",
-                        lineInterpolate: "basis",
-                        class: "previous"
-                    });
-                    g.setEdge(trans.via, trans.to, {
-                        lineInterpolate: "basis",
-                        class: "previous"
-                        // arrowheadStyle: "stroke: none; fill: blue",
-                        // arrowheadClass: "arrowhead"
-                    });
-                }
-                else {
-                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: "basis"});
-                    g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis"});
-                }
-            });
 
             // set up external edges
             specification.transitionsToExternalMachines.forEach(function (trans) {
@@ -446,11 +466,13 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 g.setEdge(trans.fromMachine, trans.to, {class: "syncFrom", lineInterpolate: "basis"});
             });
 
-
+*/
+            $log.debug("buildGraph: Ready to return g");
             return g;
         }
 
-        var renderSpecification = function (specification, currentState, svgDomElement) {
+        function renderSpecification(specification, currentState, svgDomElement) {
+            $log.debug("in renderSpecification");
             var g = buildGraph(specification, currentState);
 
             svgDomElement.select("g").remove();
@@ -468,50 +490,56 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // Create the renderer
             var render = new dagreD3.render();
 
-            render.shapes().initial = function (parent, bbox, node) {
-                var w = bbox.width,
-                    h = bbox.height,
-                    shapeSvg = parent.insert("circle")
-                        .attr("cx", 0)
-                        .attr("cy", 0)
-                        .attr("r", 10)
-                        .attr("label", "")
-                        .attr("class", "initial");
-                node.intersect = function (point) {
-                    return dagreD3.intersect.circle(node, 10, point);
-                };
-
-                return shapeSvg;
+            render.shapes().initial = function(){
+                $log.debug("is it in or before the fucntino")
             };
 
-            render.shapes().final = function (parent, bbox, node) {
-                var w = bbox.width,
-                    h = bbox.height,
-                    shapeSvg = parent.insert("g");
+            // render.shapes().initial = function (parent, bbox, node) {
+            //     $log.debug("render shapes initial node");
+            //     var w = bbox.width,
+            //         h = bbox.height,
+            //         shapeSvg = parent.insert("circle")
+            //             .attr("cx", 0)
+            //             .attr("cy", 0)
+            //             .attr("r", 10)
+            //             .attr("label", "")
+            //             .attr("class", "initial");
+            //     node.intersect = function (point) {
+            //         return dagreD3.intersect.circle(node, 10, point);
+            //     };
+            //
+            //     return shapeSvg;
+            // };
 
-                shapeSvg.insert("circle")
-                    .attr("cx", 0)
-                    .attr("cy", 0)
-                    .attr("r", 10)
-                    .attr("stroke", "#000")
-                    .attr("fill-opacity", "0")
-                    .attr("label", "")
-                    .attr("class", "final");
-
-                shapeSvg.insert("circle")
-                    .attr("cx", 0)
-                    .attr("cy", 0)
-                    .attr("r", 6)
-                    .attr("label", "");
-
-                node.intersect = function (point) {
-                    return dagreD3.intersect.circle(node, 10, point);
-                };
-
-                return shapeSvg;
-            };
+            // render.shapes().final = function (parent, bbox, node) {
+            //     var w = bbox.width,
+            //         h = bbox.height,
+            //         shapeSvg = parent.insert("g");
+            //
+            //     shapeSvg.insert("circle")
+            //         .attr("cx", 0)
+            //         .attr("cy", 0)
+            //         .attr("r", 10)
+            //         .attr("stroke", "#000")
+            //         .attr("fill-opacity", "0")
+            //         .attr("label", "")
+            //         .attr("class", "final");
+            //
+            //     shapeSvg.insert("circle")
+            //         .attr("cx", 0)
+            //         .attr("cy", 0)
+            //         .attr("r", 6)
+            //         .attr("label", "");
+            //
+            //     node.intersect = function (point) {
+            //         return dagreD3.intersect.circle(node, 10, point);
+            //     };
+            //
+            //     return shapeSvg;
+            // };
 
             var styleTooltip = function (edgeNode) {
+                $log.debug("styletooltip anyone?");
                 function createPart(title, items) {
                     var result = "<h2>" + title + "</h2><table class='tiptable'>";
                     for (var i = 0; i < items.length; i++) {
@@ -548,10 +576,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
                 return content;
             };
-
+            $log.debug("got here");
             // Run the renderer. This is what draws the final graph.
+            $log.debug("g: ", g);
+            $log.debug("inner: ", inner);
             render(inner, g);
-
+            $log.debug("did not get here");
             // tooltips
             inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
                 .attr("title", function (v) {
@@ -672,14 +702,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // initialPlacement: initialPlacement,
                 // currentState: currentState
             }
-        };
+        }
 
         return {
-            Specification: Specification,
+            // Specification: Specification,
             currentState: currentState,
             render: renderSpecification
         }
-    }();
+    }
 
 
     function transition() {
