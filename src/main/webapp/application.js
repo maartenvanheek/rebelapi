@@ -27,7 +27,7 @@ app.config(function ($logProvider) {
     // show/hide debug logs
     $logProvider.debugEnabled(true);
 });
-
-app.run(['$log', function($log){
-    $log.debug("in app.run");
-}]);
+//
+// app.run(['$log', function($log){
+//     $log.debug("in app.run");
+// }]);

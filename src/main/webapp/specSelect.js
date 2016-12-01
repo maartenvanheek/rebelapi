@@ -6,24 +6,24 @@ var app = angular.module('visualApp.selection', []);
 
 app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($log, $uibModal, $http, $window) {
     var vm = this;
-    vm.processSpecs = processSpecs;
     vm.selectSpec = selectSpec;
 
     vm.showSpec = showSpec;
     vm.startSpec = startSpec;
     vm.transition = transition;
-    vm.toggleDev = toggleDev;
-
     vm.apitest = apitest;
     vm.reset = reset;
 
-    vm.specNames = undefined;
+    // vm.specNames = undefined;
 
     // vm.specs = specs;
     $http.get('states_hacked.json').then(function (results) {
         vm.specs = results.data;
-        $log.debug("specs: ", vm.specs);
-        vm.processSpecs();
+        // $log.debug("specs: ", vm.specs);
+        // vm.processSpecs();
+        var keys = Object.keys(vm.specs.paths);
+        vm.specNames = getSpecNames(keys);
+        vm.specMaps = getSpecMaps(keys);
     });
 
     // maybe need a prefix for the api?
@@ -34,7 +34,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.devmode = true;
 
     //default spec (so you don't have to pick one always)
-    // vm.selectedSpec = specs[0];
+    // vm.selectedSpec = vm.specs[0];
 
     vm.transitionId = undefined;
 
@@ -49,12 +49,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
-    function toggleDev() {
-        $log.debug("Devmode is now ", vm.devmode);
-        vm.devmode ? $log.debug("Yes") : $log.debug("No.");
-        vm.devmode ? changeColour('dev') : changeColour();
-    }
-
     function apitest() {
         var url = vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId;
         $log.debug("Attempting to GET " + url);
@@ -66,12 +60,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             });
     }
 
-    function processSpecs() {
-        // api calls are stored as keys (objects) in specs.paths
-        // obtain array with api paths
-        var keys = Object.keys(vm.specs.paths);
-        // OPTION 1: regex. This regex matches a whole word between slashes, with negative lookahead, global
-        // it returns unique matches. CAUTION: if path/contains/more/slahses, it will also return those matches...
+    function getSpecNames(keys){
+        // Two options: extrac specname from key with regex, or look up the unique entries in the 'tags' field...
         // http://stackoverflow.com/questions/14061349/regular-expression-match-all-words-but-match-unique-words-only-once
         var rgx = /[,"\n]\/(\w+)\/(?!.*\1\b)/g;
         // this creates an array of matches. Unfortunately, these contain the delimiters as well...
@@ -81,45 +71,48 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         for (var i = 0; i < matches.length; i++) {
             matches[i] = matches[i].replace(/[,\/]/g, "");
         }
+        return matches;
+        // NOTE: REGEX might fail with multiple slashes in an endpoint, example string:
+        // var str = '/IngNLAccount/{id}/Deposit,/IngNLAccount/{id}/Open,/OnUsCreditTransferNL/{id},/OnUsCreditTransferNL/{id}/Create/test/longer/call';
+    }
 
-        vm.specNames = matches;
-        $log.debug("specnames: ", vm.specNames);
-        $log.debug("Keys: ", keys);
+    function getSpecMaps(keys) {
+        // api calls are stored as keys (objects) in specs.paths
+        // obtain array with api paths
+        var spec_re = /\/(\w+)\//;
+        var trans_re = /.*}\/(\w+)/;
 
-        var objmap = {};
+        // var objmap = {};
+        // alternative to the below: have the regex matcher find next (or something)
+        // build tree
+        // keys.forEach(function (key) {
+        //     // $log.debug("key:  ", key);
+        //     if (key[key.length - 1] !== "}") {
+        //         var spec = spec_re.exec(key)[1];
+        //         var trans = trans_re.exec(key)[1];
+        //
+        //         var stateObj = vm.specs.paths[key]["x-states"];
+        //
+        //         if (objmap.hasOwnProperty(spec)){
+        //             objmap[spec][trans] = stateObj;
+        //         }
+        //         else {
+        //             objmap[spec] = {[trans]: stateObj};
+        //         }
+        //     }
+        // });
+        // $log.debug("objmap: ", objmap);
+
+        // mapmap approach
         var statemap = new Map();
         var specmap = new Map(statemap);
 
-        var spec_re = /\/(\w+)\//;
-        var trans_re = /.*}\/(\w+)/;
-        // alternative to the below: have the regex matcher find next (or something)
-        // build tree
-        keys.forEach(function (key) {
-            // $log.debug("key:  ", key);
-            if (key[key.length - 1] !== "}") {
-                var spec = spec_re.exec(key)[1];
-                var trans = trans_re.exec(key)[1];
-
-                var stateObj = vm.specs.paths[key]["x-states"];
-
-                if (objmap.hasOwnProperty(spec)){
-                    objmap[spec][trans] = stateObj;
-                }
-                else {
-                    objmap[spec] = {[trans]: stateObj};
-                }
-            }
-        });
-
-        // mapmap approach
         keys.forEach(function (key) {
             if (key[key.length - 1] !== "}") {
                 var spec = spec_re.exec(key)[1];
                 var trans = trans_re.exec(key)[1];
 
                 var stateObj = vm.specs.paths[key]["x-states"];
-
-
 
                 if (specmap.has(spec)){
                     specmap.set(spec, statemap.set(trans, stateObj));
@@ -130,17 +123,20 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 }
             }
         });
-        $log.debug("objmap: ", objmap);
         $log.debug("mapmap: ", specmap);
+        return specmap;
+    }
 
-        //example string
-        // var str = '/IngNLAccount/{id}/Deposit,/IngNLAccount/{id}/Open,/OnUsCreditTransferNL/{id},/OnUsCreditTransferNL/{id}/Create/test/longer/call';
-        // OPTION 2: look in the 'tag' and then filter that for unique entries - seems more work
+    function getSpecMap(specName){
+        return specmap;
     }
 
     function selectSpec() {
         // after selection of a specification, we have to parse the specs to find the right states
         $log.debug("Selected: ", vm.selectedSpec);
+
+        var map = vm.specMaps.get(vm.selectedSpec);
+        $log.debug(map);
     }
 
 
