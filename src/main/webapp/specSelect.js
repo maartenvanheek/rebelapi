@@ -86,7 +86,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         $log.debug("specnames: ", vm.specNames);
         $log.debug("Keys: ", keys);
 
-        var map = {};
+        var objmap = {};
+        var statemap = new Map();
+        var specmap = new Map(statemap);
 
         var spec_re = /\/(\w+)\//;
         var trans_re = /.*}\/(\w+)/;
@@ -100,17 +102,36 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
                 var stateObj = vm.specs.paths[key]["x-states"];
 
-                if (map.hasOwnProperty(spec)){
-                    // map[spec][trans] = vm.specs.paths[key]["x-states"];
-                    map[spec][trans] = stateObj;
+                if (objmap.hasOwnProperty(spec)){
+                    objmap[spec][trans] = stateObj;
                 }
                 else {
-                    map[spec] = {[trans]: stateObj};
+                    objmap[spec] = {[trans]: stateObj};
                 }
             }
         });
 
-        $log.debug("Map: ", map);
+        // mapmap approach
+        keys.forEach(function (key) {
+            if (key[key.length - 1] !== "}") {
+                var spec = spec_re.exec(key)[1];
+                var trans = trans_re.exec(key)[1];
+
+                var stateObj = vm.specs.paths[key]["x-states"];
+
+
+
+                if (specmap.has(spec)){
+                    specmap.set(spec, statemap.set(trans, stateObj));
+                }
+                else {
+                    statemap = new Map();
+                    specmap.set(spec, statemap.set(trans, stateObj));
+                }
+            }
+        });
+        $log.debug("objmap: ", objmap);
+        $log.debug("mapmap: ", specmap);
 
         //example string
         // var str = '/IngNLAccount/{id}/Deposit,/IngNLAccount/{id}/Open,/OnUsCreditTransferNL/{id},/OnUsCreditTransferNL/{id}/Create/test/longer/call';
