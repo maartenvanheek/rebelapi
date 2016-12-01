@@ -86,9 +86,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         $log.debug("specnames: ", vm.specNames);
         $log.debug("Keys: ", keys);
 
-        var tree = new Map();
-        var states = new Map();
-        var map = [];
+        var map = {};
 
         var spec_re = /\/(\w+)\//;
         var trans_re = /.*}\/(\w+)/;
@@ -100,16 +98,15 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 var spec = spec_re.exec(key)[1];
                 var trans = trans_re.exec(key)[1];
 
-                var obj = {};
-                // obj[trans] = vm.specs.paths[key]["x-states"];
-                obj[spec] = {[trans]: vm.specs.paths[key]["x-states"]};
-                map.push(obj);
-                // $log.debug("spec: ", spec);
-                // $log.debug("trans:", trans);
-                // get states??
-                // tree.set(spec, trans);
-                // $log.debug(tree);
-                // states.set(tree.get(trans), vm.specs.paths[key]["x-states"]);
+                var stateObj = vm.specs.paths[key]["x-states"];
+
+                if (map.hasOwnProperty(spec)){
+                    // map[spec][trans] = vm.specs.paths[key]["x-states"];
+                    map[spec][trans] = stateObj;
+                }
+                else {
+                    map[spec] = {[trans]: stateObj};
+                }
             }
         });
 
