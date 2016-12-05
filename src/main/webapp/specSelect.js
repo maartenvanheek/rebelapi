@@ -490,53 +490,49 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // Create the renderer
             var render = new dagreD3.render();
 
-            render.shapes().initial = function(){
-                $log.debug("is it in or before the fucntino")
+            render.shapes().initial = function (parent, bbox, node) {
+                $log.debug("render shapes initial node");
+                var w = bbox.width,
+                    h = bbox.height,
+                    shapeSvg = parent.insert("circle")
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", 10)
+                        .attr("label", "")
+                        .attr("class", "initial");
+                node.intersect = function (point) {
+                    return dagreD3.intersect.circle(node, 10, point);
+                };
+
+                return shapeSvg;
             };
 
-            // render.shapes().initial = function (parent, bbox, node) {
-            //     $log.debug("render shapes initial node");
-            //     var w = bbox.width,
-            //         h = bbox.height,
-            //         shapeSvg = parent.insert("circle")
-            //             .attr("cx", 0)
-            //             .attr("cy", 0)
-            //             .attr("r", 10)
-            //             .attr("label", "")
-            //             .attr("class", "initial");
-            //     node.intersect = function (point) {
-            //         return dagreD3.intersect.circle(node, 10, point);
-            //     };
-            //
-            //     return shapeSvg;
-            // };
+            render.shapes().final = function (parent, bbox, node) {
+                var w = bbox.width,
+                    h = bbox.height,
+                    shapeSvg = parent.insert("g");
 
-            // render.shapes().final = function (parent, bbox, node) {
-            //     var w = bbox.width,
-            //         h = bbox.height,
-            //         shapeSvg = parent.insert("g");
-            //
-            //     shapeSvg.insert("circle")
-            //         .attr("cx", 0)
-            //         .attr("cy", 0)
-            //         .attr("r", 10)
-            //         .attr("stroke", "#000")
-            //         .attr("fill-opacity", "0")
-            //         .attr("label", "")
-            //         .attr("class", "final");
-            //
-            //     shapeSvg.insert("circle")
-            //         .attr("cx", 0)
-            //         .attr("cy", 0)
-            //         .attr("r", 6)
-            //         .attr("label", "");
-            //
-            //     node.intersect = function (point) {
-            //         return dagreD3.intersect.circle(node, 10, point);
-            //     };
-            //
-            //     return shapeSvg;
-            // };
+                shapeSvg.insert("circle")
+                    .attr("cx", 0)
+                    .attr("cy", 0)
+                    .attr("r", 10)
+                    .attr("stroke", "#000")
+                    .attr("fill-opacity", "0")
+                    .attr("label", "")
+                    .attr("class", "final");
+
+                shapeSvg.insert("circle")
+                    .attr("cx", 0)
+                    .attr("cy", 0)
+                    .attr("r", 6)
+                    .attr("label", "");
+
+                node.intersect = function (point) {
+                    return dagreD3.intersect.circle(node, 10, point);
+                };
+
+                return shapeSvg;
+            };
 
             var styleTooltip = function (edgeNode) {
                 $log.debug("styletooltip anyone?");
@@ -576,6 +572,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
                 return content;
             };
+
             $log.debug("got here");
             // Run the renderer. This is what draws the final graph.
             $log.debug("g: ", g);
