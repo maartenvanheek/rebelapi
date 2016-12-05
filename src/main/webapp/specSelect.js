@@ -24,6 +24,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         var keys = Object.keys(vm.specs.paths);
         vm.specNames = getSpecNames(keys);
         vm.specMap = getSpecMap(keys);
+        $log.debug(vm.specs);
     });
 
     // maybe need a prefix for the api?
@@ -113,6 +114,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 var trans = trans_re.exec(key)[1];
 
                 var stateObj = vm.specs.paths[key]["x-states"];
+                stateObj.params = vm.specs.paths[key].post.parameters;
+                stateObj.trans = trans;
 
                 if (specmap.has(spec)) {
                     specmap.set(spec, statemap.set(trans, stateObj));
@@ -129,10 +132,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     function selectSpec() {
         // after selection of a specification, we have to parse the specs to find the right states
-        // $log.debug("Selected: ", vm.selectedSpec);
         var map = vm.specMap.get(vm.selectedSpec);
-        $log.debug(map);
-        // now build the tree?
         showSpec(map, undefined);
     }
 
@@ -149,10 +149,24 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         showSpec();
     }
 
+    function getInit(map){
+        for (var value of map.values()) {
+            if (value.initial) {
+                return value.fromstate;
+            }
+        }
+        throw new Error("No initial state found!");
+    }
+
     function showSpec(map, currentState) {
         if (currentState === undefined) {
-            currentState = "state_init";
+            try {
+                currentState = getInit(map);
+            } catch (e){
+                window.alert(e);
+            }
         }
+        $log.debug("currentState: ", currentState);
         var svg = d3.select("svg");
         // specRenderer.buildGraph(vm.selectedSpec,currentState);
         // specRenderer.renderSpecification(vm.selectedSpec, currentState, svg);
@@ -165,7 +179,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     // HERE starts them evil spec renderer
     function specRenderer(map, currentState, svg) {
-        $log.debug("specrenderereererer");
         renderSpecification(map, currentState, svg);
 
         var state_regex = /state_([a-zA-Z]+)/;
@@ -295,7 +308,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             var drawState = function (state) {
-                $log.debug("drawState: ", state);
+                $log.debug("State: ", state);
+                // THIS IS DRAWN MULTIPLE TIMES (for each Event it loops all connected States)
+
                 // ok so you can draw them as shape circle (and they get the radius from the label size)
                 // or you can do it as the initial/final state drawing... but then they won't have labels :/
                 g.setNode(state, {
@@ -322,44 +337,44 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             var drawEvent = function (event) {
-                // $log.debug("drawEvent id:_"+event.id+"_");
-                // $log.debug("available: ", vm.availableEvent);
-                // $log.debug("previous: ", vm.previousState);
-
+                // this one is different from the rest because we create it with EVENT not with EVENT.FROM/TOSTATE
+                $log.debug("currentState: ", currentState);
+                $log.debug("event: ", event.trans);
                 if (vm.previousState.indexOf(event) > -1) {
-                    g.setNode(event, {
+                    $log.debug("Yay! previousState");
+                    g.setNode(event.label, {
                         shape: "circle",
                         class: "previousEdge",
-                        label: event,
+                        label: event.label,
                         // doc: "doc" in event ? event.doc : "",
                         // config: "config" in event ? event.config : [],
-                        // params: "params" in event ? event.params : [],
+                        params: event.params,
                         // preconditions: "preconditions" in event ? event.preconditions : [],
                         // postconditions: "postconditions" in event ? event.postconditions : [],
                         // sync: "sync" in event ? event.sync : []
                     })
                 }
                 else if (event.fromstate === currentState) {
-                    g.setNode(event, {
+                    g.setNode(event.label, {
                         shape: "circle",
                         class: "availableEdge",
-                        label: event,
+                        label: event.label,
                         // doc: "doc" in event ? event.doc : "",
                         // config: "config" in event ? event.config : [],
-                        // params: "params" in event ? event.params : [],
+                        params: event.params,
                         // preconditions: "preconditions" in event ? event.preconditions : [],
                         // postconditions: "postconditions" in event ? event.postconditions : [],
                         // sync: "sync" in event ? event.sync : []
                     });
                 }
                 else {
-                    g.setNode(event, {
+                    g.setNode(event.label, {
                         shape: "circle",
                         class: "unavailableEdge",
-                        label: event,
+                        label: event.label,
                         // doc: "doc" in event ? event.doc : "",
                         // config: "config" in event ? event.config : [],
-                        // params: "params" in event ? event.params : [],
+                        params: event.params,
                         // preconditions: "preconditions" in event ? event.preconditions : [],
                         // postconditions: "postconditions" in event ? event.postconditions : [],
                         // sync: "sync" in event ? event.sync : []
@@ -389,91 +404,71 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 }
             };
 
-            map.forEach(function (value, transition) {
-                // maybe it's possible to drawEvent(transition) here
+            // for (var [key, value] of map){};
+            // map.forEach(function(value, key){});
+            map.forEach(function (value, key) {
+                // visualisation is slightly different if you put drawEvent in if-tree
+                // $log.debug("transition, value: ", transition, value);
+                drawEvent(value);
                 if (value.initial) {
                     drawInit(value.fromstate);
-                    drawEvent(transition);
                     drawState(value.tostate);
                 }
                 else if (value.final) {
                     drawState(value.fromstate);
-                    drawEvent(transition);
                     drawFinal(value.tostate);
                 }
                 else {
                     drawState(value.fromstate);
-                    drawEvent(transition);
                     drawState(value.tostate);
                 }
                 drawEdge({from: value.fromstate, via: transition, to: value.tostate})
             });
 
-            // specification.states.forEach(function (state) {
-            //     if (state.initial) {
-            //         drawInit(state)
-            //     }
-            //     else if (state.final) {
-            //         drawFinal(state)
-            //     }
-            //     else {
-            //         drawState(state);
-            //     }
-            //     // REVIEW: callback and assign g.setparent here instead?
-            //     // g.setParent(state.id, groupId);
-            // });
 
 
-            // add events
-            // specification.events.forEach(function (event) {
-            //     drawEvent(event);
-            // });
+            /*
+             function getLabelOfExternalMachine(external) {
+             var label = external.url !== "?" ? "<a href='#" + external.url + "'>" + external.label + "</a>" : external.label;
+             switch (external.referenceType) {
+             case "in":
+             label = "<p>&lt;&lt;is referenced by&gt;&gt;</p>" + label;
+             break;
+             case "out":
+             label = "<p>&lt;&lt;references&gt;&gt;</p>" + label;
+             break;
+             case "both":
+             label = "<p>&lt;&lt;both references and is referenced by&gt;&gt;</p>" + label;
+             break;
+             }
+             return label;
+             }
 
-/*
-
-            function getLabelOfExternalMachine(external) {
-                var label = external.url !== "?" ? "<a href='#" + external.url + "'>" + external.label + "</a>" : external.label;
-                switch (external.referenceType) {
-                    case "in":
-                        label = "<p>&lt;&lt;is referenced by&gt;&gt;</p>" + label;
-                        break;
-                    case "out":
-                        label = "<p>&lt;&lt;references&gt;&gt;</p>" + label;
-                        break;
-                    case "both":
-                        label = "<p>&lt;&lt;both references and is referenced by&gt;&gt;</p>" + label;
-                        break;
-                }
-                return label;
-            }
-
-            // add external machines
-            specification.externalMachines.forEach(function (external) {
-                g.setNode(external.id, {
-                    labelType: "html",
-                    label: getLabelOfExternalMachine(external),
-                    class: "externalMachine " + external.referenceType,
-                    shape: "rect"
-                });
-            });
+             // add external machines
+             specification.externalMachines.forEach(function (external) {
+             g.setNode(external.id, {
+             labelType: "html",
+             label: getLabelOfExternalMachine(external),
+             class: "externalMachine " + external.referenceType,
+             shape: "rect"
+             });
+             });
 
 
-            // set up external edges
-            specification.transitionsToExternalMachines.forEach(function (trans) {
-                g.setEdge(trans.from, trans.to, {class: "syncTo", lineInterpolate: "basis"});
-            });
+             // set up external edges
+             specification.transitionsToExternalMachines.forEach(function (trans) {
+             g.setEdge(trans.from, trans.to, {class: "syncTo", lineInterpolate: "basis"});
+             });
 
-            specification.transitionsFromExternalMachines.forEach(function (trans) {
-                g.setEdge(trans.fromMachine, trans.to, {class: "syncFrom", lineInterpolate: "basis"});
-            });
+             specification.transitionsFromExternalMachines.forEach(function (trans) {
+             g.setEdge(trans.fromMachine, trans.to, {class: "syncFrom", lineInterpolate: "basis"});
+             });
+             */
 
-*/
-            $log.debug("buildGraph: Ready to return g");
             return g;
         }
 
         function renderSpecification(specification, currentState, svgDomElement) {
-            $log.debug("in renderSpecification");
             var g = buildGraph(specification, currentState);
 
             svgDomElement.select("g").remove();
@@ -482,17 +477,16 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             var inner = svgDomElement.select("g");
 
             // Set up zoom support
-            var zoom = d3.behavior.zoom().on("zoom", function () {
-                inner.attr("transform", "translate(" + d3.event.translate + ")" +
-                    "scale(" + d3.event.scale + ")");
-            });
-            svgDomElement.call(zoom);
+            // var zoom = d3.behavior.zoom().on("zoom", function () {
+            //     inner.attr("transform", "translate(" + d3.event.translate + ")" +
+            //         "scale(" + d3.event.scale + ")");
+            // });
+            // svgDomElement.call(zoom);
 
             // Create the renderer
             var render = new dagreD3.render();
 
             render.shapes().initial = function (parent, bbox, node) {
-                $log.debug("render shapes initial node");
                 var w = bbox.width,
                     h = bbox.height,
                     shapeSvg = parent.insert("circle")
@@ -536,7 +530,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             var styleTooltip = function (edgeNode) {
-                $log.debug("styletooltip anyone?");
+                $log.debug("edgeNode: ", edgeNode);
+                // this is basically the tooltip title
+                // var content = edgeNode.doc !== "" ? "<h2>" + edgeNode.doc + "</h2>" : "";
+                var content = "<h2>" + edgeNode.label + "</h2>";
+
                 function createPart(title, items) {
                     var result = "<h2>" + title + "</h2><table class='tiptable'>";
                     for (var i = 0; i < items.length; i++) {
@@ -553,33 +551,26 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                             ((o.code !== undefined) ? "<tr><td><code>" + o.code + "</code></td></tr>" : "");
                         items.push(item);
                     });
-
                     return items;
                 }
 
-                // this is basically the tooltip title
-                var content = edgeNode.doc !== "" ? "<h2>" + edgeNode.doc + "</h2>" : "";
-
                 if (edgeNode.params.length > 0) {
+                    $log.debug(edgeNode.params);
                     var items = [];
                     items.push("<thead><th>Parameter</th><th>Type</th></thead>");
                     edgeNode.params.forEach(function (p) {
+                        // p.type may be undefined --> use description in that case?
                         items.push("<tr><td>" + p.name + "</td><td>" + p.type + "</td></tr>");
                     });
                     content += createPart("Transition parameters", items);
                 }
-                content += edgeNode.preconditions.length > 0 ? createPart("Preconditions", preprocessStatements(edgeNode.preconditions)) : "";
-                content += edgeNode.postconditions.length > 0 ? createPart("Postconditions", preprocessStatements(edgeNode.postconditions)) : "";
-                content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
+                // content += edgeNode.preconditions.length > 0 ? createPart("Preconditions", preprocessStatements(edgeNode.preconditions)) : "";
+                // content += edgeNode.postconditions.length > 0 ? createPart("Postconditions", preprocessStatements(edgeNode.postconditions)) : "";
+                // content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
                 return content;
             };
 
-            $log.debug("got here");
-            // Run the renderer. This is what draws the final graph.
-            $log.debug("g: ", g);
-            $log.debug("inner: ", inner);
             render(inner, g);
-            $log.debug("did not get here");
             // tooltips
             inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
                 .attr("title", function (v) {
