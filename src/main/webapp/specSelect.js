@@ -14,7 +14,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.reset = reset;
 
     vm.interpolOptions = ["linear", "step", "basis", "bundle", "cardinal", "monotone"];
-    vm.interpol = vm.interpolOptions[3];
+    vm.interpol = vm.interpolOptions[2];
 
     $http.get('states_hacked.json').then(function (results) {
         vm.specs = results.data;
@@ -24,15 +24,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     });
 
     // maybe need a prefix for the api?
-    vm.server = 'http://localhost:8080/';
-    vm.apiPrefix = '';
-    vm.machineId = 1; //TODO: not sure yet where we get/store this id
-    vm.specData = undefined; //TODO: this is meant to come from HTTP GET
+    var server = 'http://localhost:8080/';
+    var apiPrefix = '';
+
+    vm.machineId = 1;
     vm.devmode = true;
 
     //default spec (so you don't have to pick one always)
     vm.selectedSpec = undefined;
-
     vm.transitionId = undefined;
 
     // initial size of graph (not relevant??)
@@ -45,10 +44,13 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
+    function getUrl(){
+        return server + apiPrefix + vm.selectedSpec + '/' + vm.machineId;
+    }
+
     function apitest() {
-        var url = vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId;
-        $log.debug("Attempting to GET " + url);
-        $http.get(url)
+        $log.debug("GET from ", getUrl());
+        $http.get(getUrl())
             .then(function (results) {
                 $log.info("GET succes", results);
             }, function (error) {
@@ -57,7 +59,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     }
 
     function getSpecNames(keys) {
-        // Two options: extrac specname from key with regex, or look up the unique entries in the 'tags' field...
+        // Two options: extract specname from key with regex, or look up the unique entries in the 'tags' field...
         // http://stackoverflow.com/questions/14061349/regular-expression-match-all-words-but-match-unique-words-only-once
         var rgx = /[,"\n]\/(\w+)\/(?!.*\1\b)/g;
         // this creates an array of matches. Unfortunately, these contain the delimiters as well...
@@ -120,7 +122,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     function reset() {
         vm.previousState = [];
-        $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
+        $http.get(getUrl())
             .then(function (results) {
                 console.debug('api call: Retrieve specification data');
                 vm.specData = results.data;
@@ -140,11 +142,19 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     }
 
     function showSpec(currentState) {
+        $log.debug('here');
         // TODO: remove map from here??
         var map = vm.specMap.get(vm.selectedSpec);
         if (currentState === undefined) {
             try {
-                currentState = getInit(map);
+                $http.get(getUrl())
+                    .then(function(results){
+                        $log.debug("x", results.data);
+                        currentState = results.data.toLowerCase();
+                    }, function (error){
+                        currentState = getInit(map);
+                        throw new Error("Could not fetch from url, reverting to pre-init state")
+                    });
             } catch (e) {
                 window.alert(e);
             }
@@ -394,19 +404,25 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             map.forEach(function (value, key) {
                 // visualisation is slightly different if you put drawEvent in if-tree
                 drawEvent(value);
-                // drawState(value);
-                
-                if (value.initial) {
-                    drawInit(value.fromstate);
-                    drawState(value.tostate);
+
+                var fromExists = g._nodes.hasOwnProperty(value.fromstate);
+                var toExists = g._nodes.hasOwnProperty(value.tostate);
+
+                if (!fromExists) {
+                    if (value.initial) {
+                        drawInit(value.fromstate);
+                    }
+                    else {
+                        drawState(value.fromstate);
+                    }
                 }
-                else if (value.final) {
-                    drawState(value.fromstate);
-                    drawFinal(value.tostate);
-                }
-                else {
-                    drawState(value.fromstate);
-                    drawState(value.tostate);
+                if (!toExists){
+                    if (value.final) {
+                        drawFinal(value.tostate);
+                    }
+                    else {
+                        drawState(value.tostate);
+                    }
                 }
                 // TODO: change fromviato to drawEdge(value)
                 drawEdge({from: value.fromstate, via: value.trans, to: value.tostate})
@@ -614,7 +630,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // TODO: do the actual post
                 // window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
                 // $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
-                $http.get('http://localhost:8080/IngNLAccount/1/')
+                $http.get(getUrl())
                 // $http.post('http://localhost:8080/OnUsCreditTransferNL/1/Create', body) //it's pretty impossible to derive the right body shape :/
                     .then(function (results) {
                         $log.warn('STUBSTUB: this just proves that the server is up. Does not actually have functionality.');

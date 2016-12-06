@@ -34,8 +34,6 @@
     <link rel="stylesheet" href="lib/external/tipsy.css">
 
 
-
-
     <!--Graph specific (colouring)-->
     <!--<script src="css/colour.js"></script>-->
     <link rel="stylesheet/less" href="css/graph.less">
@@ -48,24 +46,37 @@
     <div class="col-md-10">
         <h2 class="brandbar-title">Interactive Specification Visualiser</h2>
         <!--<p>Params: {{vm.params}}</p>-->
-        <form name="selectionForm" class="form-vertical">
-            <div class="form-group">
-                <label for="specSelect">Select specification:</label>
-                <!--ng-options="spec.name for spec in vm.specs"-->
-                <select name="specSelect" id="specSelect"
-                        ng-options="specName for specName in vm.specNames"
-                        ng-model="vm.selectedSpec"
-                        ng-change="vm.showSpec()"></select>
-                <button ng-click="vm.showSpec()">Show</button>
-                <button ng-click="vm.startSpec()">Start action</button>
-            </div>
-        </form>
+        <div id="formdiv">
+            <form name="selectionForm" class="form-vertical">
+                <div class="form-group">
+                    <label for="specSelect">Select specification:</label>
+                    <!--ng-options="spec.name for spec in vm.specs"-->
+                    <select name="specSelect" id="specSelect"
+                            ng-options="specName for specName in vm.specNames"
+                            ng-model="vm.selectedSpec"
+                            ng-change="vm.showSpec()"></select>
+                    <label for="machineId">Machine ID:</label>
+                    <input name="machineId"
+                           size="5"
+                           id="machineId"
+                           type="number"
+                           ng-model="vm.machineId"
+                           min="0"
+                           step="1">
+                    <button ng-click="vm.showSpec()">Show</button>
+                    <button ng-click="vm.startSpec()" ng-disabled="true">Start action</button>
+                </div>
+            </form>
+        </div>
+        <div id="svg">
+            <svg id="graph" xmlns="http://www.w3.org/2000/svg" width="{{vm.w}}"
+                 height="{{vm.h}}" viewBox="0 0 {{vm.w}} {{vm.h}}" preserveAspectRatio="true">
+                <g/> <!--vziw doet dit niets. SVG attribuut , geen idee: viewBox="0 0 10 200"-->
+            </svg>
+        </div>
+
     </div>
-</tg-full-cover>
 
-
-
-<tg-full-cover color="b" aria-labelledby="devmode-title" arrow="true">
     <div class="col-md-2" id="devdiv">
         <div class="pull-right">
             <label for="devmode"><span>Dev </span>
@@ -77,7 +88,7 @@
             <select name="interpolSelect" id="interpolSelect"
                     ng-options="ip for ip in vm.interpolOptions"
                     ng-model="vm.interpol"
-                    ng-change="vm.showSpec()"></select>
+                    ng-change="vm.showSpec(currentState)"></select>
             <button ng-click="vm.apitest()">Test API (GET)</button>
         </div>
         <div ng-show="vm.devmode">
@@ -91,19 +102,22 @@
             <hr>
         </div>
     </div>
+
+
+    <div class="col-md-10" id="visualisation">
+
+    </div>
+
+</tg-full-cover>
+
+<!--<tg-full-cover color="b" aria-labelledby="visual-title">-->
+
+<!--</tg-full-cover>-->
+
+<tg-full-cover color="b" aria-labelledby="devmode-title" arrow="true">
     <!--{{vm.specs | json}}-->
 </tg-full-cover>
 
-<tg-full-cover color="b" aria-labelledby="visual-title">
-    <div class="col-md-12" id="visualisation">
-        <div id="svg" class="col-md-12">
-            <svg id="graph" xmlns="http://www.w3.org/2000/svg" width="{{vm.w}}"
-                 height="{{vm.h}}" viewBox="0 0 {{vm.w}} {{vm.h}}" preserveAspectRatio="true">
-                <g/> <!--vziw doet dit niets. SVG attribuut , geen idee: viewBox="0 0 10 200"-->
-            </svg>
-        </div>
-    </div>
-</tg-full-cover>
 </body>
 </html>
 

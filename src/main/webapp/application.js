@@ -25,7 +25,7 @@ app.config(['$urlRouterProvider', function ($urlRouterProvider) {
 
 app.config(function ($logProvider) {
     // show/hide debug logs
-    $logProvider.debugEnabled(true);
+    $logProvider.debugEnabled(false);
 });
 //
 // app.run(['$log', function($log){
