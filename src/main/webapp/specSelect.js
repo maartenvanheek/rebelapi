@@ -88,7 +88,21 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 var trans = trans_re.exec(key)[1];
 
                 var stateObj = vm.specs.paths[key]["x-states"];
-                stateObj.params = vm.specs.paths[key].post.parameters;
+                // I am now going to assume that only the first is relevant (machine id),
+                // the other is provided by the schema
+                // stateObj.params = new Array(vm.specs.paths[key].post.parameters[0]);
+                var ref = vm.specs.paths[key].post.parameters[1].schema["$ref"];
+                var body = vm.specs[ref.split("/")[1]][ref.split("/")[2]];
+                stateObj.params = body.properties[trans].properties;
+
+                // ok this is an absolutely horrible way to get the data out
+                // is there always only one required object,
+                // and does it also coincide with the name of the corresponding Transition?
+
+                // path: vm.specs.definitions.[ref_body].properties.[Transition].properties
+                // var prop = body.properties[Object.keys(body.properties)[0]].properties;
+
+                // var prop = body.properties[trans].properties;
                 stateObj.trans = trans;
 
                 if (specmap.has(spec)) {
@@ -519,10 +533,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     return items;
                 }
 
-                if (edgeNode.params.length > 0) {
+                if (edgeNode.params.length > 1) {
                     var items = [];
                     items.push("<thead><th>Parameter</th><th>Type</th></thead>");
-                    edgeNode.params.forEach(function (p) {
+                    edgeNode.params[1].forEach(function (p) {
                         // p.type may be undefined --> use description in that case?
                         items.push("<tr><td>" + p.name + "</td><td>" + p.type + "</td></tr>");
                     });
@@ -535,13 +549,16 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
             render(inner, g);
             // tooltips
-            inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
-                .attr("title", function (v) {
-                    return styleTooltip(g.node(v));
-                })
-                .each(function (v) {
-                    $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
-                });
+            // inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
+            //     .attr("title", function (trans) {
+            //         return styleTooltip(g.node(trans));
+            //     })
+            //     .filter(function (trans){
+            //         return map.get(trans).params.length > 0;
+            //     })
+            //     .each(function (v) {
+            //         $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
+            //     });
 
             // select only available events
             inner.selectAll("g.node.availableEdge, g.node.previousEdge")
