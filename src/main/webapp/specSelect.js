@@ -533,15 +533,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     return items;
                 }
 
-                if (edgeNode.params.length > 1) {
-                    var items = [];
-                    items.push("<thead><th>Parameter</th><th>Type</th></thead>");
-                    edgeNode.params[1].forEach(function (p) {
-                        // p.type may be undefined --> use description in that case?
-                        items.push("<tr><td>" + p.name + "</td><td>" + p.type + "</td></tr>");
-                    });
-                    content += createPart("Transition parameters", items);
+                var items = [];
+                items.push("<thead><th>Parameter</th></thead>");
+                for (var param in edgeNode.params) {
+                    $log.debug(param);
+                    $log.debug(edgeNode);
+                    items.push("<tr><td>" + param + "</td></tr>");
                 }
+                content += createPart("Transition parameters", items);
                 // content += edgeNode.preconditions.length > 0 ? createPart("Preconditions", preprocessStatements(edgeNode.preconditions)) : "";
                 // content += edgeNode.postconditions.length > 0 ? createPart("Postconditions", preprocessStatements(edgeNode.postconditions)) : "";
                 // content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
@@ -549,25 +548,27 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
             render(inner, g);
             // tooltips
-            // inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
-            //     .attr("title", function (trans) {
-            //         return styleTooltip(g.node(trans));
-            //     })
-            //     .filter(function (trans){
-            //         return map.get(trans).params.length > 0;
-            //     })
-            //     .each(function (v) {
-            //         $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
-            //     });
+            inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
+                .filter(function (trans) {
+                    return map.get(trans).params !== undefined;
+                })
+                .attr("title", function (trans) {
+                    return styleTooltip(g.node(trans));
+                })
+                .each(function (v) {
+                    $(this).tipsy({gravity: "w", opacity: 0.8, html: true});
+                });
 
             // select only available events
             inner.selectAll("g.node.availableEdge, g.node.previousEdge")
-                .filter(function(trans){
+                .filter(function (trans) {
                     return map.get(trans).fromstate === currentState;
                 })
                 // TODO: ng 'start action' should trigger this event also
                 .on("click", function (trans) {
-                    if (g.node(trans).params.length > 0) {
+                    // if (g.node(trans).params.length > 0)
+                    if (map.get(trans).params !== undefined)
+                    {
                         $log.info("Parameters needed");
                         $log.debug("Params: ", g.node(trans).params);
                         vm.params = g.node(trans).params;
