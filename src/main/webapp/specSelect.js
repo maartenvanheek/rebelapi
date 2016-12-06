@@ -83,27 +83,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         var spec_re = /\/(\w+)\//;
         var trans_re = /.*}\/(\w+)/;
 
-        // var objmap = {};
-        // alternative to the below: have the regex matcher find next (or something)
-        // build tree
-        // keys.forEach(function (key) {
-        //     // $log.debug("key:  ", key);
-        //     if (key[key.length - 1] !== "}") {
-        //         var spec = spec_re.exec(key)[1];
-        //         var trans = trans_re.exec(key)[1];
-        //
-        //         var stateObj = vm.specs.paths[key]["x-states"];
-        //
-        //         if (objmap.hasOwnProperty(spec)){
-        //             objmap[spec][trans] = stateObj;
-        //         }
-        //         else {
-        //             objmap[spec] = {[trans]: stateObj};
-        //         }
-        //     }
-        // });
-        // $log.debug("objmap: ", objmap);
-
         // mapmap approach
         var statemap = new Map();
         var specmap = new Map(statemap);
@@ -338,14 +317,16 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             var drawEvent = function (event) {
                 // this one is different from the rest because we create it with EVENT not with EVENT.FROM/TOSTATE
-                $log.debug("currentState: ", currentState);
-                $log.debug("event: ", event.trans);
+                // $log.debug("currentState: ", currentState);
+                // $log.debug("event: ", event.trans);
+                var transition = event.trans;
+
                 if (vm.previousState.indexOf(event) > -1) {
                     $log.debug("Yay! previousState");
-                    g.setNode(event.label, {
+                    g.setNode(transition, {
                         shape: "circle",
                         class: "previousEdge",
-                        label: event.label,
+                        label: transition,
                         // doc: "doc" in event ? event.doc : "",
                         // config: "config" in event ? event.config : [],
                         params: event.params,
@@ -355,10 +336,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     })
                 }
                 else if (event.fromstate === currentState) {
-                    g.setNode(event.label, {
+                    g.setNode(transition, {
                         shape: "circle",
                         class: "availableEdge",
-                        label: event.label,
+                        label: transition,
                         // doc: "doc" in event ? event.doc : "",
                         // config: "config" in event ? event.config : [],
                         params: event.params,
@@ -368,10 +349,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     });
                 }
                 else {
-                    g.setNode(event.label, {
+                    g.setNode(transition, {
                         shape: "circle",
                         class: "unavailableEdge",
-                        label: event.label,
+                        label: transition,
                         // doc: "doc" in event ? event.doc : "",
                         // config: "config" in event ? event.config : [],
                         params: event.params,
@@ -380,11 +361,12 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         // sync: "sync" in event ? event.sync : []
                     });
                 }
-                g.setParent(event, groupId);
+                g.setParent(transition, groupId);
             };
 
             // Set up internal edges
             var drawEdge = function (trans) {
+                // TODO: drawEdge(param) trans.from becomes param.fromstate, etc
                 if (vm.previousState.indexOf(trans.via) > -1) {
                     g.setEdge(trans.from, trans.via, {
                         arrowhead: "undirected",
@@ -403,12 +385,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis"});
                 }
             };
-
-            // for (var [key, value] of map){};
-            // map.forEach(function(value, key){});
             map.forEach(function (value, key) {
                 // visualisation is slightly different if you put drawEvent in if-tree
-                // $log.debug("transition, value: ", transition, value);
+                $log.debug("transition, value: ", transition, value);
                 drawEvent(value);
                 if (value.initial) {
                     drawInit(value.fromstate);
@@ -422,7 +401,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     drawState(value.fromstate);
                     drawState(value.tostate);
                 }
-                drawEdge({from: value.fromstate, via: transition, to: value.tostate})
+                // TODO: change fromviato to drawEdge(value)
+                drawEdge({from: value.fromstate, via: value.trans, to: value.tostate})
             });
 
 
@@ -569,7 +549,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
                 return content;
             };
-
+            $log.debug(g);
             render(inner, g);
             // tooltips
             inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
