@@ -319,7 +319,7 @@
                 "initial": true,
                 "fromstate": "uninitialised",
                 "tostate": "accepted",
-                "available": "authorize",
+                "available": ["Authorize"],
                 "final": false
             }
         },
@@ -511,7 +511,7 @@
                 "initial": false,
                 "fromstate": "accepted",
                 "tostate": "authorized",
-                "available": "book rejectClosedAccount rejectExecutionDateInThePast",
+                "available": ["Book", "RejectClosedAccount", "RejectExecutionDateInThePast"],
                 "final": false
             }
         }

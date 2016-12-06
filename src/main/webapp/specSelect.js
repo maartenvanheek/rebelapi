@@ -41,7 +41,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     // track previous states to show progress
     vm.previousState = [];
-    vm.availableEvent = [];
 
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
@@ -107,7 +106,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     function reset() {
         vm.previousState = [];
-        vm.availableEvent = [];
         $http.get(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/')
             .then(function (results) {
                 console.debug('api call: Retrieve specification data');
@@ -118,7 +116,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         showSpec();
     }
 
-    function getInit(map){
+    function getInit(map) {
         for (var value of map.values()) {
             if (value.initial) {
                 return value.fromstate;
@@ -133,7 +131,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         if (currentState === undefined) {
             try {
                 currentState = getInit(map);
-            } catch (e){
+            } catch (e) {
                 window.alert(e);
             }
         }
@@ -307,12 +305,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             var drawEvent = function (event) {
                 // this one is different from the rest because we create it with EVENT not with EVENT.FROM/TOSTATE
-                // $log.debug("currentState: ", currentState);
-                // $log.debug("event: ", event.trans);
                 var transition = event.trans;
 
-                if (vm.previousState.indexOf(event) > -1) {
-                    $log.debug("Yay! previousState");
+                if (vm.previousState.indexOf(transition) > -1) {
                     g.setNode(transition, {
                         shape: "circle",
                         class: "previousEdge",
@@ -371,7 +366,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     });
                 }
                 else {
-                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: vm.interpol});
+                    g.setEdge(trans.from, trans.via, {
+                        label: "",
+                        arrowhead: "undirected",
+                        lineInterpolate: vm.interpol
+                    });
                     g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: vm.interpol});
                 }
             };
@@ -393,7 +392,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // TODO: change fromviato to drawEdge(value)
                 drawEdge({from: value.fromstate, via: value.trans, to: value.tostate})
             });
-
 
 
             /*
@@ -548,10 +546,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             // select only available events
             inner.selectAll("g.node.availableEdge")
-            // filter is not needed if edge class is specifig
-            // .filter(function (id) {
-            //     return state_regex.exec(currentState)[1] === event_regex.exec(id)[1];
-            // })
             // // TODO: ng 'start action' should trigger this event also
                 .on("click", function (id) {
                     if (g.node(id).params.length > 0) {
@@ -588,12 +582,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
                 });
 
-            String.prototype.toProperCase = function () {
-                return this.replace(/\w\S*/g, function (txt) {
-                    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-                });
-            };
-
             function updateState(id, body) {
                 $log.debug("I'm going to update state");
 
@@ -612,7 +600,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         vm.previousState.push(id);
                         currentState = stateObj.tostate;
                         // available events are now stored in one string, separated by spaces
-                        vm.availableEvent = stateObj.available;
 
                         // $log.debug("going to show state ", currentState)
                         showSpec(currentState);

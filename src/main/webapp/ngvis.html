@@ -81,9 +81,11 @@
             <button ng-click="vm.apitest()">Test API (GET)</button>
         </div>
         <div ng-show="vm.devmode">
+            {{vm.previousState}}
             <p>Previous state:</p>
-            <p ng-repeat="state in vm.previousState">{{state}}</p>
+            <p ng-repeat="state in vm.previousState track by $index">{{state}}</p>
             <hr>
+            {{vm.availableEvent}}
             <p>Available events:</p>
             <p ng-repeat="event in vm.availableEvent">{{event}}</p>
             <hr>
