@@ -137,21 +137,19 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         }
         $log.debug("currentState: ", currentState);
         var svg = d3.select("svg");
-        // specRenderer.buildGraph(vm.selectedSpec,currentState);
-        // specRenderer.renderSpecification(vm.selectedSpec, currentState, svg);
         specRenderer(map, currentState, svg);
     }
 
     function startSpec() {
-        // this should fire the initial spec
+        updateState();
     }
 
     // HERE starts them evil spec renderer
     function specRenderer(map, currentState, svg) {
         renderSpecification(map, currentState, svg);
 
-        var state_regex = /state_([a-zA-Z]+)/;
-        var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
+        // var state_regex = /state_([a-zA-Z]+)/;
+        // var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
         // var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
         //                               fields, events, states, transitions, externalMachines,
         //                               transitionsToExternalMachines, transitionsFromExternalMachines) {
@@ -307,6 +305,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // this one is different from the rest because we create it with EVENT not with EVENT.FROM/TOSTATE
                 var transition = event.trans;
 
+                // NOTE: Some edges can be previous AND available (e.g. deposit, withdraw...)
                 if (vm.previousState.indexOf(transition) > -1) {
                     g.setNode(transition, {
                         shape: "circle",
@@ -545,13 +544,16 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
 
             // select only available events
-            inner.selectAll("g.node.availableEdge")
-            // // TODO: ng 'start action' should trigger this event also
-                .on("click", function (id) {
-                    if (g.node(id).params.length > 0) {
+            inner.selectAll("g.node.availableEdge, g.node.previousEdge")
+                .filter(function(trans){
+                    return map.get(trans).fromstate === currentState;
+                })
+                // TODO: ng 'start action' should trigger this event also
+                .on("click", function (trans) {
+                    if (g.node(trans).params.length > 0) {
                         $log.info("Parameters needed");
-                        $log.debug("Params: ", g.node(id).params);
-                        vm.params = g.node(id).params;
+                        $log.debug("Params: ", g.node(trans).params);
+                        vm.params = g.node(trans).params;
                         var $uibModalInstance = $uibModal.open({
                             animation: true,
                             templateUrl: 'partials/transitionForm.tpl.html',
@@ -566,7 +568,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         $uibModalInstance.result.then(function (results) {
                             if (results) {
                                 $log.debug("Modal results: ", results);
-                                updateState(id, results)
+                                updateState(trans, results)
                             }
                             else {
                                 $log.debug("No results");
@@ -577,7 +579,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     }
                     else {
                         console.debug("No params needed");
-                        updateState(id, undefined)
+                        updateState(trans, undefined)
                     }
 
                 });
