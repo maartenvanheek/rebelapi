@@ -6,7 +6,6 @@ var app = angular.module('visualApp.selection', []);
 
 app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($log, $uibModal, $http, $window) {
     var vm = this;
-    vm.selectSpec = selectSpec;
 
     vm.showSpec = showSpec;
     vm.startSpec = startSpec;
@@ -14,17 +13,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.apitest = apitest;
     vm.reset = reset;
 
-    // vm.specNames = undefined;
+    vm.interpolOptions = ["linear", "step", "basis", "bundle", "cardinal", "monotone"];
+    vm.interpol = vm.interpolOptions[3];
 
-    // vm.specs = specs;
     $http.get('states_hacked.json').then(function (results) {
         vm.specs = results.data;
-        // $log.debug("specs: ", vm.specs);
-        // vm.processSpecs();
         var keys = Object.keys(vm.specs.paths);
         vm.specNames = getSpecNames(keys);
         vm.specMap = getSpecMap(keys);
-        $log.debug(vm.specs);
     });
 
     // maybe need a prefix for the api?
@@ -109,12 +105,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         return specmap;
     }
 
-    function selectSpec() {
-        // after selection of a specification, we have to parse the specs to find the right states
-        var map = vm.specMap.get(vm.selectedSpec);
-        showSpec(map, undefined);
-    }
-
     function reset() {
         vm.previousState = [];
         vm.availableEvent = [];
@@ -137,7 +127,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         throw new Error("No initial state found!");
     }
 
-    function showSpec(map, currentState) {
+    function showSpec(currentState) {
+        // TODO: remove map from here??
+        var map = vm.specMap.get(vm.selectedSpec);
         if (currentState === undefined) {
             try {
                 currentState = getInit(map);
@@ -287,9 +279,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             var drawState = function (state) {
-                $log.debug("State: ", state);
-                // THIS IS DRAWN MULTIPLE TIMES (for each Event it loops all connected States)
-
+                // TODO: THIS IS DRAWN MULTIPLE TIMES (for each Event it loops all connected States)
                 // ok so you can draw them as shape circle (and they get the radius from the label size)
                 // or you can do it as the initial/final state drawing... but then they won't have labels :/
                 g.setNode(state, {
@@ -370,24 +360,23 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 if (vm.previousState.indexOf(trans.via) > -1) {
                     g.setEdge(trans.from, trans.via, {
                         arrowhead: "undirected",
-                        lineInterpolate: "basis",
+                        lineInterpolate: vm.interpol,
                         class: "previous"
                     });
                     g.setEdge(trans.via, trans.to, {
-                        lineInterpolate: "basis",
+                        lineInterpolate: vm.interpol,
                         class: "previous"
                         // arrowheadStyle: "stroke: none; fill: blue",
                         // arrowheadClass: "arrowhead"
                     });
                 }
                 else {
-                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: "basis"});
-                    g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: "basis"});
+                    g.setEdge(trans.from, trans.via, {label: "", arrowhead: "undirected", lineInterpolate: vm.interpol});
+                    g.setEdge(trans.via, trans.to, {label: "", lineInterpolate: vm.interpol});
                 }
             };
             map.forEach(function (value, key) {
                 // visualisation is slightly different if you put drawEvent in if-tree
-                $log.debug("transition, value: ", transition, value);
                 drawEvent(value);
                 if (value.initial) {
                     drawInit(value.fromstate);
@@ -510,7 +499,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             var styleTooltip = function (edgeNode) {
-                $log.debug("edgeNode: ", edgeNode);
                 // this is basically the tooltip title
                 // var content = edgeNode.doc !== "" ? "<h2>" + edgeNode.doc + "</h2>" : "";
                 var content = "<h2>" + edgeNode.label + "</h2>";
@@ -535,7 +523,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 }
 
                 if (edgeNode.params.length > 0) {
-                    $log.debug(edgeNode.params);
                     var items = [];
                     items.push("<thead><th>Parameter</th><th>Type</th></thead>");
                     edgeNode.params.forEach(function (p) {
@@ -549,7 +536,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // content += edgeNode.sync.length > 0 ? createPart("Synchronized events", preprocessStatements(edgeNode.sync)) : "";
                 return content;
             };
-            $log.debug(g);
             render(inner, g);
             // tooltips
             inner.selectAll("g.node.availableEdge, g.node.previousEdge, g.node.unavailableEdge")
@@ -610,8 +596,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
             function updateState(id, body) {
                 $log.debug("I'm going to update state");
-                var transition = event_regex.exec(id)[2].toProperCase();
-                var nextState = "state_" + event_regex.exec(id)[3];
+
+                var stateObj = map.get(id);
 
                 // TODO: do the actual post
                 // window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
@@ -621,17 +607,14 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     .then(function (results) {
                         $log.warn('STUBSTUB: this just proves that the server is up. Does not actually have functionality.');
                         // push old state and transition
-                        vm.previousState.push(id);
-                        vm.previousState.push(currentState);
-                        currentState = nextState;
-                        // ok so here we already have to push the new available state, after flushing the array
-                        vm.availableEvent = [];
-                        specification.events.forEach(function (event) {
-                            if (state_regex.exec(nextState)[1] === event_regex.exec(event.id)[1]) {
-                                vm.availableEvent.push(event.id);
-                            }
-                        });
 
+                        vm.previousState.push(stateObj.fromstate);
+                        vm.previousState.push(id);
+                        currentState = stateObj.tostate;
+                        // available events are now stored in one string, separated by spaces
+                        vm.availableEvent = stateObj.available;
+
+                        // $log.debug("going to show state ", currentState)
                         showSpec(currentState);
                     }, function (error) {
                         $log.error("Error updating state", error);

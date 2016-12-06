@@ -238,7 +238,7 @@
                 "initial": true,
                 "fromstate": "new",
                 "tostate": "opened",
-                "available": "withdraw deposit close",
+                "available": ["Withdraw", "Deposit", "Close"],
                 "final": false
             }
         },

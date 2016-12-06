@@ -55,7 +55,7 @@
                 <select name="specSelect" id="specSelect"
                         ng-options="specName for specName in vm.specNames"
                         ng-model="vm.selectedSpec"
-                        ng-change="vm.selectSpec()"></select>
+                        ng-change="vm.showSpec()"></select>
                 <button ng-click="vm.showSpec()">Show</button>
                 <button ng-click="vm.startSpec()" ng-disabled="true">Start action</button>
             </div>
@@ -74,6 +74,10 @@
         </div>
         <div ng-show="vm.devmode">
             <p>Graph w, h: {{vm.w|number:1}}, {{vm.h|number:1}}</p>
+            <select name="interpolSelect" id="interpolSelect"
+                    ng-options="ip for ip in vm.interpolOptions"
+                    ng-model="vm.interpol"
+                    ng-change="vm.showSpec()"></select>
             <button ng-click="vm.apitest()">Test API (GET)</button>
         </div>
         <div ng-show="vm.devmode">
