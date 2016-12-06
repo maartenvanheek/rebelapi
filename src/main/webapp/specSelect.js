@@ -292,27 +292,31 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // TODO: THIS IS DRAWN MULTIPLE TIMES (for each Event it loops all connected States)
                 // ok so you can draw them as shape circle (and they get the radius from the label size)
                 // or you can do it as the initial/final state drawing... but then they won't have labels :/
-                g.setNode(state, {
-                    shape: "circle",
-                    // bbox: "width: 500, height: 500",
-                    label: state,
-                    class: "stateNode"
-                });
-                if (state === currentState) {
+                $log.debug(state);
+                $log.debug(g._nodes.hasOwnProperty(state));
+                {
                     g.setNode(state, {
                         shape: "circle",
-                        class: "currentNode",
-                        label: state
-                    })
+                        // bbox: "width: 500, height: 500",
+                        label: state,
+                        class: "stateNode"
+                    });
+                    if (state === currentState) {
+                        g.setNode(state, {
+                            shape: "circle",
+                            class: "currentNode",
+                            label: state
+                        })
+                    }
+                    else if (vm.previousState.indexOf(state) > -1) {
+                        g.setNode(state, {
+                            shape: "circle",
+                            class: "previousNode",
+                            label: state
+                        })
+                    }
+                    g.setParent(state, groupId);
                 }
-                else if (vm.previousState.indexOf(state) > -1) {
-                    g.setNode(state, {
-                        shape: "circle",
-                        class: "previousNode",
-                        label: state
-                    })
-                }
-                g.setParent(state, groupId);
             };
 
             var drawEvent = function (event) {
@@ -390,6 +394,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             map.forEach(function (value, key) {
                 // visualisation is slightly different if you put drawEvent in if-tree
                 drawEvent(value);
+                // drawState(value);
+                
                 if (value.initial) {
                     drawInit(value.fromstate);
                     drawState(value.tostate);
@@ -536,8 +542,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 var items = [];
                 items.push("<thead><th>Parameter</th></thead>");
                 for (var param in edgeNode.params) {
-                    $log.debug(param);
-                    $log.debug(edgeNode);
                     items.push("<tr><td>" + param + "</td></tr>");
                 }
                 content += createPart("Transition parameters", items);
@@ -621,7 +625,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         currentState = stateObj.tostate;
                         // available events are now stored in one string, separated by spaces
 
-                        // $log.debug("going to show state ", currentState)
                         showSpec(currentState);
                     }, function (error) {
                         $log.error("Error updating state", error);
