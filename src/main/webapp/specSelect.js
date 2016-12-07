@@ -44,7 +44,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     // placeholder text (I am still confused why the graph doesn't fill full width, but text does...)
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
-    function getUrl(){
+    function getUrl() {
         return server + apiPrefix + vm.selectedSpec + '/' + vm.machineId;
     }
 
@@ -142,26 +142,24 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     }
 
     function showSpec(currentState) {
-        $log.debug('here');
         // TODO: remove map from here??
         var map = vm.specMap.get(vm.selectedSpec);
-        if (currentState === undefined) {
-            try {
-                $http.get(getUrl())
-                    .then(function(results){
-                        $log.debug("x", results.data);
-                        currentState = results.data.toLowerCase();
-                    }, function (error){
-                        currentState = getInit(map);
-                        throw new Error("Could not fetch from url, reverting to pre-init state")
-                    });
-            } catch (e) {
-                window.alert(e);
-            }
+
+        // ok here we run into async problems again
+        try {
+            $http.get(getUrl())
+                .then(function (results) {
+                    var stateInfo = results.data;
+                    currentState = stateInfo.split("(")[1].split(",")[0].toLowerCase();
+                    $log.debug("currentState: ", currentState);
+                    var svg = d3.select("svg");
+                    specRenderer(map, currentState, svg);
+                }, function (error) {
+                    throw new Error("Could not fetch from url, reverting to pre-init state")
+                });
+        } catch (e) {
+            window.alert(e);
         }
-        $log.debug("currentState: ", currentState);
-        var svg = d3.select("svg");
-        specRenderer(map, currentState, svg);
     }
 
     function startSpec() {
@@ -416,7 +414,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         drawState(value.fromstate);
                     }
                 }
-                if (!toExists){
+                if (!toExists) {
                     if (value.final) {
                         drawFinal(value.tostate);
                     }
@@ -587,8 +585,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // TODO: ng 'start action' should trigger this event also
                 .on("click", function (trans) {
                     // if (g.node(trans).params.length > 0)
-                    if (map.get(trans).params !== undefined)
-                    {
+                    if (map.get(trans).params !== undefined) {
                         $log.info("Parameters needed");
                         $log.debug("Params: ", g.node(trans).params);
                         vm.params = g.node(trans).params;
