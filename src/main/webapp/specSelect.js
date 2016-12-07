@@ -45,7 +45,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
     function getUrl() {
-        return server + apiPrefix + vm.selectedSpec + '/' + vm.machineId;
+        return server + apiPrefix + vm.selectedSpec + '/' + vm.machineId + '/';
     }
 
     function apitest() {
@@ -132,30 +132,30 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         showSpec();
     }
 
-    function getInit(map) {
-        for (var value of map.values()) {
-            if (value.initial) {
-                return value.fromstate;
-            }
-        }
-        throw new Error("No initial state found!");
-    }
+    // obsolete
+    // function getInit(map) {
+    //     for (var value of map.values()) {
+    //         if (value.initial) {
+    //             return value.fromstate;
+    //         }
+    //     }
+    //     throw new Error("No initial state found!");
+    // }
 
     function showSpec(currentState) {
         // TODO: remove map from here??
         var map = vm.specMap.get(vm.selectedSpec);
 
-        // ok here we run into async problems again
         try {
             $http.get(getUrl())
                 .then(function (results) {
                     var stateInfo = results.data;
-                    currentState = stateInfo.split("(")[1].split(",")[0].toLowerCase();
+                    currentState = stateInfo.split("(")[1].split(",")[0];
                     $log.debug("currentState: ", currentState);
                     var svg = d3.select("svg");
                     specRenderer(map, currentState, svg);
                 }, function (error) {
-                    throw new Error("Could not fetch from url, reverting to pre-init state")
+                    throw new Error("Server error: ", error);
                 });
         } catch (e) {
             window.alert(e);
@@ -170,8 +170,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     function specRenderer(map, currentState, svg) {
         renderSpecification(map, currentState, svg);
 
-        // var state_regex = /state_([a-zA-Z]+)/;
-        // var event_regex = /event_([a-zA-Z]+)_([a-zA-Z]+)_([a-zA-Z]+)/;
         // var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
         //                               fields, events, states, transitions, externalMachines,
         //                               transitionsToExternalMachines, transitionsFromExternalMachines) {
@@ -188,10 +186,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         //     this.externalMachines = externalMachines;
         //     this.transitionsToExternalMachines = transitionsToExternalMachines;
         //     this.transitionsFromExternalMachines = transitionsFromExternalMachines
-        // };
-
-        // var currentState = function (currentState) {
-        //     this.currentState = currentState;
         // };
 
         function buildGraph(specification, currentState) {
@@ -270,7 +264,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
              }
              */
 
-
             var drawInit = function (state) {
                 g.setNode(state, {
                     shape: "initial",
@@ -300,31 +293,27 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 // TODO: THIS IS DRAWN MULTIPLE TIMES (for each Event it loops all connected States)
                 // ok so you can draw them as shape circle (and they get the radius from the label size)
                 // or you can do it as the initial/final state drawing... but then they won't have labels :/
-                $log.debug(state);
-                $log.debug(g._nodes.hasOwnProperty(state));
-                {
+                g.setNode(state, {
+                    shape: "circle",
+                    // bbox: "width: 500, height: 500",
+                    label: state,
+                    class: "stateNode"
+                });
+                if (state === currentState) {
                     g.setNode(state, {
                         shape: "circle",
-                        // bbox: "width: 500, height: 500",
-                        label: state,
-                        class: "stateNode"
-                    });
-                    if (state === currentState) {
-                        g.setNode(state, {
-                            shape: "circle",
-                            class: "currentNode",
-                            label: state
-                        })
-                    }
-                    else if (vm.previousState.indexOf(state) > -1) {
-                        g.setNode(state, {
-                            shape: "circle",
-                            class: "previousNode",
-                            label: state
-                        })
-                    }
-                    g.setParent(state, groupId);
+                        class: "currentNode",
+                        label: state
+                    })
                 }
+                else if (vm.previousState.indexOf(state) > -1) {
+                    g.setNode(state, {
+                        shape: "circle",
+                        class: "previousNode",
+                        label: state
+                    })
+                }
+                g.setParent(state, groupId);
             };
 
             var drawEvent = function (event) {
@@ -603,7 +592,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         $uibModalInstance.result.then(function (results) {
                             if (results) {
                                 $log.debug("Modal results: ", results);
-                                updateState(trans, results)
+                                $log.debug({[trans]: {results}});
+                                updateState(trans, {[trans]: {results}})
                             }
                             else {
                                 $log.debug("No results");
@@ -617,30 +607,33 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         updateState(trans, undefined)
                     }
 
+                    $log.debug("async anyone?");
+
                 });
 
             function updateState(id, body) {
                 $log.debug("I'm going to update state");
+                $log.debug("POST body: ", body);
 
                 var stateObj = map.get(id);
 
                 // TODO: do the actual post
-                // window.alert('POST to' + vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition);
-                // $http.post(vm.server + vm.apiPrefix + vm.selectedSpec.name + '/' + vm.machineId + '/' + transition, body)
-                $http.get(getUrl())
-                // $http.post('http://localhost:8080/OnUsCreditTransferNL/1/Create', body) //it's pretty impossible to derive the right body shape :/
+                $.post(getUrl() + id, body)
                     .then(function (results) {
-                        $log.warn('STUBSTUB: this just proves that the server is up. Does not actually have functionality.');
-                        // push old state and transition
+                        $log.debug(results.data);
 
                         vm.previousState.push(stateObj.fromstate);
                         vm.previousState.push(id);
-                        currentState = stateObj.tostate;
-                        // available events are now stored in one string, separated by spaces
 
+                        // TODO REVIEW: Two options to get current (new) state
+                        // (1) get it from tostate info. Should be ok since HTTP success
+                        currentState = stateObj.tostate;
+                        // (2) maybe more proper: from http response itself
+                        currentState = results.data.split("(")[1].split("(")[0];
                         showSpec(currentState);
                     }, function (error) {
-                        $log.error("Error updating state", error);
+                        // $log.error("Error updating state", error);
+                        $log.error("Response text: ", error.responseText);
                     });
             }
 
@@ -701,7 +694,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         });
         $uibModalInstance.result.then(function (results) {
             if (results) {
-                $log.debug("Do something with modal result")
+                $log.debug("Modal close: ", results);
             }
         })
     }
@@ -713,27 +706,8 @@ app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params
         $log.debug("modal params: ", params);
         var tvm = this;
         //TODO: Where to get currencies from?
-        tvm.currencies = ["USD", "EUR"];
-        tvm.selectedCurrency = tvm.currencies[1];
         tvm.params = params;
-
-        $scope.money = {
-            currency: "EUR",
-            value: 0
-        };
-
-
-        $scope.$watchCollection('money', function updateMoney(money) {
-            $log.debug("update money");
-            var moneystr = money.currency + " " + money.value;
-            $log.debug(moneystr);
-            tvm.params.amount = moneystr;
-        });
-
-
         tvm.close = function (data) {
-            // replace money string
-
             $uibModalInstance.close(data);
         }
     }]);

@@ -28,6 +28,7 @@ app.config(function ($logProvider) {
     $logProvider.debugEnabled(true);
 });
 //
-// app.run(['$log', function($log){
-//     $log.debug("in app.run");
-// }]);
+app.run(['$http', function($http){
+    // $http.defaults.headers.post.Access-Control-Allow-Origin = '*';
+    $http.defaults.headers.post['Access-Control-Allow-Origin'] = 'somewhere';
+}]);

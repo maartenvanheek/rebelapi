@@ -92,8 +92,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "opened",
-                "tostate": "opened",
+                "fromstate": "Opened",
+                "tostate": "Opened",
                 "final": false
             }
         },
@@ -139,8 +139,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "opened",
-                "tostate": "closed",
+                "fromstate": "Opened",
+                "tostate": "Closed",
                 "final": true
             }
         },
@@ -186,8 +186,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "opened",
-                "tostate": "opened",
+                "fromstate": "Opened",
+                "tostate": "Opened",
                 "final": false
             }
         },
@@ -233,8 +233,8 @@
             },
             "x-states": {
                 "initial": true,
-                "fromstate": "new",
-                "tostate": "opened",
+                "fromstate": "New",
+                "tostate": "Opened",
                 "final": false
             }
         },
@@ -313,8 +313,8 @@
             },
             "x-states": {
                 "initial": true,
-                "fromstate": "uninit",
-                "tostate": "accepted",
+                "fromstate": "Uninit",
+                "tostate": "Accepted",
                 "final": false
             }
         },
@@ -360,8 +360,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "authorized",
-                "tostate": "booked",
+                "fromstate": "Authorized",
+                "tostate": "Booked",
                 "final": true
             }
         },
@@ -407,8 +407,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "authorized",
-                "tostate": "rejectedClosedAccount",
+                "fromstate": "Authorized",
+                "tostate": "RejectedClosedAccount",
                 "final": true
             }
         },
@@ -454,8 +454,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "authorized",
-                "tostate": "rejectedExecutionDateInThePast",
+                "fromstate": "Authorized",
+                "tostate": "RejectedExecutionDateInThePast",
                 "final": true
             }
         },
@@ -501,8 +501,8 @@
             },
             "x-states": {
                 "initial": false,
-                "fromstate": "accepted",
-                "tostate": "authorized",
+                "fromstate": "Accepted",
+                "tostate": "Authorized",
                 "final": false
             }
         }
