@@ -27,7 +27,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     var server = 'http://localhost:8080/';
     var apiPrefix = '';
 
-    vm.machineId = 1;
+    vm.machineId = 101;
     vm.devmode = true;
 
     //default spec (so you don't have to pick one always)
@@ -618,7 +618,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 var stateObj = map.get(id);
 
                 // TODO: do the actual post
-                $.post(getUrl() + id, body)
+                // gaah $http.post has CORS preflihgt issues which
+                jQuery.post(getUrl() + id, body)
                     .then(function (results) {
                         $log.debug(results.data);
 
@@ -692,7 +693,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 }
             }
         });
+        // TODO: below code seems not reached
         $uibModalInstance.result.then(function (results) {
+            $log.debug("modal results");
             if (results) {
                 $log.debug("Modal close: ", results);
             }
