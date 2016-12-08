@@ -13,7 +13,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
     vm.apitest = apitest;
     vm.reset = reset;
 
-    vm.currentState = '';
+    vm.currentState = undefined;
+    vm.stateData = '';
 
     vm.interpolOptions = ["linear", "step", "basis", "bundle", "cardinal", "monotone"];
     vm.interpol = vm.interpolOptions[2];
@@ -126,6 +127,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
     function reset() {
         vm.previousState = [];
         vm.availableEvent = [];
+        vm.currentState = undefined;
         showSpec();
     }
 
@@ -139,11 +141,13 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
     }
 
     function showSpec() {
+        $log.debug("current state: ", vm.currentState);
         // TODO: remove map from here??
         var map = vm.specMap.get(vm.selectedSpec);
         var svg = d3.select("svg");
 
         if (vm.staticSim) {
+            $log.debug("Static");
             if (vm.currentState === undefined){
                 vm.currentState = getInit(map);
             }
@@ -153,9 +157,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
             try {
                 $http.get(getUrl())
                     .then(function (results) {
+                        $log.debug("results.data: ", results.data);
                         var stateInfo = results.data;
                         vm.currentState = stateInfo.split("(")[1].split(",")[0];
-
+                        vm.stateData = stateInfo.split("Data")[1];
                         $log.debug("currentState: ", vm.currentState);
                         specRenderer(map, svg);
                     }, function (error) {
@@ -683,7 +688,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
 
         return {
             // Specification: Specification,
-            // currentState: currentState,
+            // currentState: vm.currentState,
             render: renderSpecification
         }
     }
