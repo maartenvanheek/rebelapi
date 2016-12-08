@@ -9,7 +9,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     vm.showSpec = showSpec;
     vm.startSpec = startSpec;
-    vm.transition = transition;
+    // vm.transition = transition;
     vm.apitest = apitest;
     vm.reset = reset;
 
@@ -28,12 +28,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     var apiPrefix = '';
 
     vm.machineId = 101;
-    vm.devmode = true;
-    vm.staticSim = true;
+    vm.devmode = false;
+    vm.staticSim = false;
 
     //default spec (so you don't have to pick one always)
     vm.selectedSpec = undefined;
-    vm.transitionId = undefined;
 
     // initial size of graph (not relevant??)
     vm.h = $window.innerHeight;
@@ -70,9 +69,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         for (var i = 0; i < matches.length; i++) {
             matches[i] = matches[i].replace(/[,\/]/g, "");
         }
+        vm.selectedSpec = matches[0];
         return matches;
         // NOTE: REGEX might fail with multiple slashes in an endpoint, example string:
-        // var str = '/IngNLAccount/{id}/Deposit,/IngNLAccount/{id}/Open,/OnUsCreditTransferNL/{id},/OnUsCreditTransferNL/{id}/Create/test/longer/call';
+        // var str = '/OnUsCreditTransferNL/{id}/Create/test/longer/call';
     }
 
     function getSpecMap(keys) {
@@ -123,13 +123,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     function reset() {
         vm.previousState = [];
-        $http.get(getUrl())
-            .then(function (results) {
-                console.debug('api call: Retrieve specification data');
-                vm.specData = results.data;
-            }, function (error) {
-                console.error("Could not retrieve specs ", error);
-            });
+        vm.availableEvent = [];
         showSpec();
     }
 
@@ -298,12 +292,10 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             };
 
             var drawState = function (state) {
-                // TODO: THIS IS DRAWN MULTIPLE TIMES (for each Event it loops all connected States)
                 // ok so you can draw them as shape circle (and they get the radius from the label size)
                 // or you can do it as the initial/final state drawing... but then they won't have labels :/
                 g.setNode(state, {
                     shape: "circle",
-                    // bbox: "width: 500, height: 500",
                     label: state,
                     class: "stateNode"
                 });
@@ -382,9 +374,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     });
                     g.setEdge(trans.via, trans.to, {
                         lineInterpolate: vm.interpol,
-                        class: "previous"
-                        // arrowheadStyle: "stroke: none; fill: blue",
-                        // arrowheadClass: "arrowhead"
+                        class: "previous",
                     });
                 }
                 else {
@@ -581,74 +571,79 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 })
                 // TODO: ng 'start action' should trigger this event also
                 .on("click", function (trans) {
-                    if (map.get(trans).params !== undefined) {
-                        $log.info("Parameters needed");
-                        // $log.debug("Params: ", g.node(trans).params);
-                        vm.params = g.node(trans).params;
-                        var $uibModalInstance = $uibModal.open({
-                            animation: true,
-                            templateUrl: 'partials/transitionForm.tpl.html',
-                            controller: 'transitionCtrl',
-                            controllerAs: 'tvm',
-                            resolve: {
-                                params: function () {
-                                    return vm.params;
-                                }
-                            }
-                        });
-                        $uibModalInstance.result.then(function (results) {
-                            if (results) {
-                                $log.debug("Modal results: ", results);
-                                $log.debug({[trans]: {results}});
-                                updateState(trans, {[trans]: results});
-                            }
-                            else {
-                                $log.debug("No results");
-                            }
-                        }, function (error) {
-                            console.error("error: ", error);
-                        })
-                    }
-                    else {
-                        console.debug("No params needed");
-                        updateState(trans, {[trans]: {}})
-                    }
+                    updateState(trans);
                 });
 
-            function getBody(trans) {
+            function getBody(trans, callback) {
+                var body = undefined;
+                var finished = false;
 
+                if (map.get(trans).params !== undefined) {
+                    $log.info("Parameters needed");
+                    // $log.debug("Params: ", g.node(trans).params);
+                    vm.params = g.node(trans).params;
+                    var $uibModalInstance = $uibModal.open({
+                        animation: true,
+                        templateUrl: 'partials/transitionForm.tpl.html',
+                        controller: 'transitionCtrl',
+                        controllerAs: 'tvm',
+                        resolve: {
+                            params: function () {
+                                return vm.params;
+                            }
+                        }
+                    });
+                    $uibModalInstance.result.then(function (results) {
+                        if (results) {
+                            $log.debug("Modal results: ", results);
+                            $log.debug({[trans]: {results}});
+                            callback({[trans]: results});
+                        }
+                        else {
+                            $log.debug("No results");
+                        }
+                    }, function (error) {
+                        console.error("error: ", error);
+                    });
+                    $log.debug("End if")
+                }
+                else {
+                    console.debug("No params needed");
+                    callback({[trans]: {}});
+                }
+                $log.debug("may run into async problems here");
             }
 
-            function updateState(id, body) {
+            function updateState(trans) {
                 $log.debug("I'm going to update state");
-                var stateObj = map.get(id);
+                var stateObj = map.get(trans);
 
                 if (vm.staticSim) {
                     vm.previousState.push(stateObj.fromstate);
-                    vm.previousState.push(id);
+                    vm.previousState.push(trans);
+                    $log.debug("static: ", vm.previousState);
                     currentState = stateObj.tostate;
                     showSpec(currentState);
                 }
                 else {
+                    getBody(trans, function(body) {
                     $log.debug("POST body: ", body);
                     // TODO: do the actual post
-                    $http.post(getUrl() + id, body)
+                    $http.post(getUrl() + trans, body)
                         .then(function (results) {
                             $log.debug(results.data);
 
                             vm.previousState.push(stateObj.fromstate);
-                            vm.previousState.push(id);
+                            vm.previousState.push(trans);
 
-                            // TODO REVIEW: Two options to get current (new) state
-                            // (1) get it from tostate info. Should be ok since HTTP success
-                            currentState = stateObj.tostate;
-                            // (2) maybe more proper: from http response itself
+                            // TODO REVIEW: get state from http response instead of from 'tostate'
                             currentState = results.data.split("(")[1].split("(")[0];
                             showSpec(currentState);
                         }, function (error) {
                             // $log.error("Error updating state", error);
                             $log.error("Response text: ", error.responseText);
                         });
+                    });
                 }
             }
 
