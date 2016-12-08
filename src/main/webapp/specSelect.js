@@ -575,9 +575,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 });
 
             function getBody(trans, callback) {
-                var body = undefined;
-                var finished = false;
-
                 if (map.get(trans).params !== undefined) {
                     $log.info("Parameters needed");
                     // $log.debug("Params: ", g.node(trans).params);
@@ -611,7 +608,6 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     console.debug("No params needed");
                     callback({[trans]: {}});
                 }
-                $log.debug("may run into async problems here");
             }
 
             function updateState(trans) {
