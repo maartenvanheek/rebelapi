@@ -29,6 +29,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
     vm.machineId = 101;
     vm.devmode = true;
+    vm.staticSim = true;
 
     //default spec (so you don't have to pick one always)
     vm.selectedSpec = undefined;
@@ -132,33 +133,40 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         showSpec();
     }
 
-    // obsolete
-    // function getInit(map) {
-    //     for (var value of map.values()) {
-    //         if (value.initial) {
-    //             return value.fromstate;
-    //         }
-    //     }
-    //     throw new Error("No initial state found!");
-    // }
+    function getInit(map) {
+        for (var value of map.values()) {
+            if (value.initial) {
+                return value.fromstate;
+            }
+        }
+        throw new Error("No initial state found!");
+    }
 
     function showSpec(currentState) {
         // TODO: remove map from here??
         var map = vm.specMap.get(vm.selectedSpec);
+        var svg = d3.select("svg");
 
-        try {
-            $http.get(getUrl())
-                .then(function (results) {
-                    var stateInfo = results.data;
-                    currentState = stateInfo.split("(")[1].split(",")[0];
-                    $log.debug("currentState: ", currentState);
-                    var svg = d3.select("svg");
-                    specRenderer(map, currentState, svg);
-                }, function (error) {
-                    throw new Error("Server error: ", error);
-                });
-        } catch (e) {
-            window.alert(e);
+        if (vm.staticSim) {
+            if (currentState === undefined){
+                currentState = getInit(map);
+            }
+            specRenderer(map, currentState, svg);
+        }
+        else {
+            try {
+                $http.get(getUrl())
+                    .then(function (results) {
+                        var stateInfo = results.data;
+                        currentState = stateInfo.split("(")[1].split(",")[0];
+                        $log.debug("currentState: ", currentState);
+                        specRenderer(map, currentState, svg);
+                    }, function (error) {
+                        throw new Error("Server error: ", error);
+                    });
+            } catch (e) {
+                window.alert(e);
+            }
         }
     }
 
@@ -573,10 +581,9 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                 })
                 // TODO: ng 'start action' should trigger this event also
                 .on("click", function (trans) {
-                    // if (g.node(trans).params.length > 0)
                     if (map.get(trans).params !== undefined) {
                         $log.info("Parameters needed");
-                        $log.debug("Params: ", g.node(trans).params);
+                        // $log.debug("Params: ", g.node(trans).params);
                         vm.params = g.node(trans).params;
                         var $uibModalInstance = $uibModal.open({
                             animation: true,
@@ -593,7 +600,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                             if (results) {
                                 $log.debug("Modal results: ", results);
                                 $log.debug({[trans]: {results}});
-                                updateState(trans, {[trans]: {results}})
+                                updateState(trans, {[trans]: results});
                             }
                             else {
                                 $log.debug("No results");
@@ -604,38 +611,45 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     }
                     else {
                         console.debug("No params needed");
-                        updateState(trans, undefined)
+                        updateState(trans, {[trans]: {}})
                     }
-
-                    $log.debug("async anyone?");
-
                 });
+
+            function getBody(trans) {
+
+            }
 
             function updateState(id, body) {
                 $log.debug("I'm going to update state");
-                $log.debug("POST body: ", body);
-
                 var stateObj = map.get(id);
 
-                // TODO: do the actual post
-                // gaah $http.post has CORS preflihgt issues which
-                jQuery.post(getUrl() + id, body)
-                    .then(function (results) {
-                        $log.debug(results.data);
+                if (vm.staticSim) {
+                    vm.previousState.push(stateObj.fromstate);
+                    vm.previousState.push(id);
+                    currentState = stateObj.tostate;
+                    showSpec(currentState);
+                }
+                else {
+                    $log.debug("POST body: ", body);
+                    // TODO: do the actual post
+                    $http.post(getUrl() + id, body)
+                        .then(function (results) {
+                            $log.debug(results.data);
 
-                        vm.previousState.push(stateObj.fromstate);
-                        vm.previousState.push(id);
+                            vm.previousState.push(stateObj.fromstate);
+                            vm.previousState.push(id);
 
-                        // TODO REVIEW: Two options to get current (new) state
-                        // (1) get it from tostate info. Should be ok since HTTP success
-                        currentState = stateObj.tostate;
-                        // (2) maybe more proper: from http response itself
-                        currentState = results.data.split("(")[1].split("(")[0];
-                        showSpec(currentState);
-                    }, function (error) {
-                        // $log.error("Error updating state", error);
-                        $log.error("Response text: ", error.responseText);
-                    });
+                            // TODO REVIEW: Two options to get current (new) state
+                            // (1) get it from tostate info. Should be ok since HTTP success
+                            currentState = stateObj.tostate;
+                            // (2) maybe more proper: from http response itself
+                            currentState = results.data.split("(")[1].split("(")[0];
+                            showSpec(currentState);
+                        }, function (error) {
+                            // $log.error("Error updating state", error);
+                            $log.error("Response text: ", error.responseText);
+                        });
+                }
             }
 
             // reset graph with click on init node
@@ -695,7 +709,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         });
         // TODO: below code seems not reached
         $uibModalInstance.result.then(function (results) {
-            $log.debug("modal results");
+            $log.debug("DOES NOT REACH//not relevant?");
             if (results) {
                 $log.debug("Modal close: ", results);
             }
@@ -706,10 +720,11 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
 app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params',
     function ($scope, $uibModalInstance, $log, params) {
-        $log.debug("modal params: ", params);
+        // $log.debug("modal params: ", params);
         var tvm = this;
         //TODO: Where to get currencies from?
         tvm.params = params;
+        $scope.output = {};
         tvm.close = function (data) {
             $uibModalInstance.close(data);
         }

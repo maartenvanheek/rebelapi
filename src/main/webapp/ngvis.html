@@ -64,6 +64,11 @@
                     <button ng-click="vm.showSpec()">Show</button>
                     <button ng-click="vm.startSpec()" ng-disabled="true">Start action</button>
                 </div>
+                <div class="form-group">
+                    <input id="staticmode" type="checkbox" ng-model="vm.staticSim" ng-change="vm.showSpec()">
+                    <label for="staticmode"><span>Static simulation</span>
+                    </label>
+                </div>
             </form>
         </div>
         <div id="svg">
@@ -108,13 +113,6 @@
 
 </tg-full-cover>
 
-<!--<tg-full-cover color="b" aria-labelledby="visual-title">-->
-
-<!--</tg-full-cover>-->
-
-<tg-full-cover color="b" aria-labelledby="devmode-title" arrow="true">
-    <!--{{vm.specs | json}}-->
-</tg-full-cover>
 
 </body>
 </html>
@@ -123,8 +121,6 @@
     .modal {
         display: block;
     }
-
-    .cluster
 </style>
 <!--http://jsfiddle.net/FFxZ3/6/-->
 <!-- THIS is for jqueryuitooltip

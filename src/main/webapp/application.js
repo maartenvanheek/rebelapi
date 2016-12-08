@@ -29,6 +29,5 @@ app.config(function ($logProvider) {
 });
 //
 app.run(['$http', function($http){
-    // $http.defaults.headers.post.Access-Control-Allow-Origin = '*';
-    $http.defaults.headers.post['Access-Control-Allow-Origin'] = 'somewhere';
+    // $http.defaults.headers.post["Content-Type"] = "application/json";
 }]);
