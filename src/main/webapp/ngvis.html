@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title><b>Rebel</b> Specification Viewer</title>
+    <title>Specification Viewer</title>
 
 
     <script src="lib/external/jquery-1.12.0.min.js"></script>
@@ -11,7 +11,6 @@
     <!--Original scripts-->
     <script src="lib/external/d3.v3.min.js" charset="utf-8"></script>
     <script src="lib/external/dagre-d3.js"></script>
-    <!--<script src="lib/external/micromarkdown.js"></script>-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tipsy/1.0.3/jquery.tipsy.js"></script>
     <script src="lib/external/tipsy.js"></script>
 
@@ -23,7 +22,6 @@
             data-semver="1.5.8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.18/angular-ui-router.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.js"></script>
-    <!--<script src="https://cdn.rawgit.com/AngularClass/angular-websocket/v2.0.0/dist/angular-websocket.js"></script>-->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <!--Angular application-->
     <script src="application.js"></script>
@@ -35,7 +33,6 @@
 
 
     <!--Graph specific (colouring)-->
-    <!--<script src="css/colour.js"></script>-->
     <link rel="stylesheet/less" href="css/graph.less">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/2.7.1/less.min.js"></script>
     <link rel="stylesheet/css" href="css/the-guide-styles-responsive.css">
@@ -52,16 +49,17 @@
                     <label for="specSelect">Select specification:</label>
                     <!--ng-options="spec.name for spec in vm.specs"-->
                     <select name="specSelect" id="specSelect"
+                            required
                             ng-options="specName for specName in vm.specNames"
-                            ng-model="vm.selectedSpec"
-                            ng-change="vm.showSpec()"></select>
-                    <label for="machineId">Machine ID:</label>
+                            ng-model="vm.selectedSpec"></select>
+                    <label for="machineId">ID:</label>
                     <input name="machineId"
+                           required
                            size="5"
                            id="machineId"
                            type="text"
                            ng-model="vm.machineId">
-                    <button ng-click="vm.showSpec()">Show</button>
+                    <button ng-click="vm.reset()" ng-disabled="selectionForm.$invalid">Show</button>
                     <button ng-click="vm.startSpec()" ng-disabled="true">Start action</button>
                 </div>
                 <div class="form-group">
@@ -71,7 +69,12 @@
                 </div>
             </form>
         </div>
-        <div id="svg">
+        <div id="fields" class="col-md-2">
+            <h2>Fields</h2>
+            <label>State</label> <span>{{vm.currentState}}</span>
+
+        </div>
+        <div id="svg" class="col-md-8">
             <svg id="graph" xmlns="http://www.w3.org/2000/svg"
                  width="{{vm.w}}"
                  height="{{vm.h}}"

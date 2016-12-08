@@ -4,7 +4,7 @@
 'use strict';
 var app = angular.module('visualApp.selection', []);
 
-app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($log, $uibModal, $http, $window) {
+app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', function ($log, $uibModal, $http, $window, $scope) {
     var vm = this;
 
     vm.showSpec = showSpec;
@@ -12,6 +12,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     // vm.transition = transition;
     vm.apitest = apitest;
     vm.reset = reset;
+
+    vm.currentState = '';
 
     vm.interpolOptions = ["linear", "step", "basis", "bundle", "cardinal", "monotone"];
     vm.interpol = vm.interpolOptions[2];
@@ -27,7 +29,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     var server = 'http://localhost:8080/';
     var apiPrefix = '';
 
-    vm.machineId = 101;
+    vm.machineId = '';
     vm.devmode = false;
     vm.staticSim = false;
 
@@ -136,25 +138,26 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         throw new Error("No initial state found!");
     }
 
-    function showSpec(currentState) {
+    function showSpec() {
         // TODO: remove map from here??
         var map = vm.specMap.get(vm.selectedSpec);
         var svg = d3.select("svg");
 
         if (vm.staticSim) {
-            if (currentState === undefined){
-                currentState = getInit(map);
+            if (vm.currentState === undefined){
+                vm.currentState = getInit(map);
             }
-            specRenderer(map, currentState, svg);
+            specRenderer(map, svg);
         }
         else {
             try {
                 $http.get(getUrl())
                     .then(function (results) {
                         var stateInfo = results.data;
-                        currentState = stateInfo.split("(")[1].split(",")[0];
-                        $log.debug("currentState: ", currentState);
-                        specRenderer(map, currentState, svg);
+                        vm.currentState = stateInfo.split("(")[1].split(",")[0];
+
+                        $log.debug("currentState: ", vm.currentState);
+                        specRenderer(map, svg);
                     }, function (error) {
                         throw new Error("Server error: ", error);
                     });
@@ -169,8 +172,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
     }
 
     // HERE starts them evil spec renderer
-    function specRenderer(map, currentState, svg) {
-        renderSpecification(map, currentState, svg);
+    function specRenderer(map, svg) {
+        renderSpecification(map, svg);
 
         // var Specification = function (fqn, name, documentation, modifier, inheritsFrom, extendedBy,
         //                               fields, events, states, transitions, externalMachines,
@@ -190,7 +193,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
         //     this.transitionsFromExternalMachines = transitionsFromExternalMachines
         // };
 
-        function buildGraph(specification, currentState) {
+        function buildGraph() {
             function guid() {
                 function s4() {
                     return Math.floor((1 + Math.random()) * 0x10000)
@@ -281,7 +284,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     label: "",
                     style: "fill: black"
                 });
-                if (state === currentState) {
+                if (state === vm.currentState) {
                     g.setNode(state, {
                         shape: "final",
                         label: "",
@@ -299,7 +302,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     label: state,
                     class: "stateNode"
                 });
-                if (state === currentState) {
+                if (state === vm.currentState) {
                     g.setNode(state, {
                         shape: "circle",
                         class: "currentNode",
@@ -334,7 +337,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                         // sync: "sync" in event ? event.sync : []
                     })
                 }
-                else if (event.fromstate === currentState) {
+                else if (event.fromstate === vm.currentState) {
                     g.setNode(transition, {
                         shape: "circle",
                         class: "availableEdge",
@@ -455,8 +458,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             return g;
         }
 
-        function renderSpecification(specification, currentState, svgDomElement) {
-            var g = buildGraph(specification, currentState);
+        function renderSpecification(map, svgDomElement) {
+            var g = buildGraph();
 
             svgDomElement.select("g").remove();
             svgDomElement.insert("g");
@@ -567,7 +570,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
             // select only available events
             inner.selectAll("g.node.availableEdge, g.node.previousEdge")
                 .filter(function (trans) {
-                    return map.get(trans).fromstate === currentState;
+                    return map.get(trans).fromstate === vm.currentState;
                 })
                 // TODO: ng 'start action' should trigger this event also
                 .on("click", function (trans) {
@@ -618,8 +621,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                     vm.previousState.push(stateObj.fromstate);
                     vm.previousState.push(trans);
                     $log.debug("static: ", vm.previousState);
-                    currentState = stateObj.tostate;
-                    showSpec(currentState);
+                    vm.currentState = stateObj.tostate;
+                    showSpec();
                 }
                 else {
                     getBody(trans, function(body) {
@@ -633,8 +636,8 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
                             vm.previousState.push(trans);
 
                             // TODO REVIEW: get state from http response instead of from 'tostate'
-                            currentState = results.data.split("(")[1].split("(")[0];
-                            showSpec(currentState);
+                            vm.currentState = results.data.split("(")[1].split("(")[0];
+                            showSpec();
                         }, function (error) {
                             // $log.error("Error updating state", error);
                             $log.error("Response text: ", error.responseText);
@@ -680,7 +683,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', function ($
 
         return {
             // Specification: Specification,
-            currentState: currentState,
+            // currentState: currentState,
             render: renderSpecification
         }
     }
@@ -716,6 +719,7 @@ app.controller('transitionCtrl', ['$scope', '$uibModalInstance', '$log', 'params
         //TODO: Where to get currencies from?
         tvm.params = params;
         $scope.output = {};
+        $scope.currentTime = new Date().getTime();
         tvm.close = function (data) {
             $uibModalInstance.close(data);
         }

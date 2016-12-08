@@ -2,21 +2,22 @@
     <h2>Enter transition parameters:</h2>
 </div>
 <div class="modal-body">
-    <form id="transForm" >
+    <form id="transForm" name="transForm" ng-submit="tvm.close(output)">
+        <input type="number" ng-model="currentTime">
         <div class="form-group" ng-repeat="(description, param) in tvm.params"
-             ng-class="{ 'has-error' : transFieldForm.{{description}}.$invalid }">
-            <ng-form name="regularForm">
+             ng-class="{ 'has-error' : output.$invalid }">
+            <form name="regularForm">
                 <label>{{description}}</label>
                 <span>({{param.type}})</span>
                 <input type="text"
                        class="form-control"
                        name="{{description}}"
                        ng-model="output[description]">
-            </ng-form>
+            </form>
         </div>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-default" ng-click="tvm.close(output)">Accept</button>
-    <button class="btn btn-danger" ng-click="$dismiss()">Cancel</button>
+    <button type="submit" class="btn btn-default" ng-click="tvm.close(output)">Accept</button>
+    <button type="button" class="btn btn-danger" ng-click="$dismiss()">Cancel</button>
 </div>
