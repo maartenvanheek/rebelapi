@@ -19,16 +19,18 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
     vm.interpolOptions = ["linear", "step", "basis", "bundle", "cardinal", "monotone"];
     vm.interpol = vm.interpolOptions[2];
 
+    // maybe need a prefix for the api?
+    var server = '';
+
     $http.get('states_hacked.json').then(function (results) {
         vm.specs = results.data;
         var keys = Object.keys(vm.specs.paths);
+        server = 'http://' + results.data.host + results.data.basePath;
+        $log.debug('server: ', server);
         vm.specNames = getSpecNames(keys);
         vm.specMap = getSpecMap(keys);
     });
 
-    // maybe need a prefix for the api?
-    var server = 'http://localhost:8080/';
-    var apiPrefix = '';
 
     vm.machineId = '';
     vm.devmode = false;
@@ -48,7 +50,7 @@ app.controller('specCtrl', ['$log', '$uibModal', '$http', '$window', '$scope', f
     vm.lipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Peccata paria. Sed ego in hoc resisto; Sed residamus, inquit, si placet. Cum praesertim illa perdiscere ludus esset. Duo Reges: constructio interrete. Sed ego in hoc resisto; In qua quid est boni praeter summam voluptatem, et eam sempiternam? At iam decimum annum in spelunca iacet.          Comprehensum, quod cognitum non habet? Murenam te accusante defenderem. Ut optime, secundum naturam affectum esse possit. Quae qui non vident, nihil umquam magnum ac cognitione dignum amaverunt. Etenim semper illud extra est, quod arte comprehenditur. Post enim Chrysippum eum non sane est disputatum. Tum Quintus: Est plane, Piso, ut dicis, inquit";
 
     function getUrl() {
-        return server + apiPrefix + vm.selectedSpec + '/' + vm.machineId + '/';
+        return server + vm.selectedSpec + '/' + vm.machineId + '/';
     }
 
     function apitest() {
